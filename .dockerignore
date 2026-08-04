@@ -1,0 +1,13 @@
+.git
+.venv
+node_modules
+apps/dashboard/node_modules
+apps/dashboard/dist
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.env
+recordings
+media
+diagnostic-bundles
