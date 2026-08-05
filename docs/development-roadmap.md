@@ -33,9 +33,9 @@ Deferred from Milestone 1:
 
 ## Milestone 2 - Sources and Playlist Ingestion
 
-Status: deferred.
+Status: implemented in repository; full Docker and frontend validation require Docker and Node package installation.
 
-Planned:
+Delivered:
 
 - M3U URL source.
 - Uploaded M3U source.
@@ -46,6 +46,15 @@ Planned:
 - Source status UI.
 - Safe URL validation.
 - Synthetic demonstration playlist.
+- Background worker polling integration.
+- Progress and error reporting.
+
+Implemented notes:
+
+- Imports store raw channel records only; no Milestone 3 cleanup, duplicate clustering, normalization, filtering, or EPG matching is executed.
+- The worker processes queued jobs outside the API process.
+- Remote source URLs are encrypted at rest and redacted in dashboard/API responses.
+- Uploaded files are saved under `STREAMFORGE_SOURCE_UPLOAD_DIR` and imported by the worker.
 
 ## Milestone 3 - Channel Normalization and Cleanup
 

@@ -1,0 +1,8 @@
+#EXTM3U
+# StreamForge synthetic demonstration playlist. These example URLs are not media providers.
+#EXTINF:-1 tvg-id="demo.news" tvg-name="Demo News" tvg-logo="https://example.com/logos/news.png" group-title="Demo News",Demo News
+https://example.com/streamforge/demo/news/master.m3u8
+#EXTINF:-1 tvg-id="demo.weather" tvg-name="Demo Weather" group-title="Demo Local",Demo Weather
+https://example.com/streamforge/demo/weather/master.m3u8
+#EXTINF:-1 tvg-id="demo.culture" tvg-name="Demo Culture" group-title="Demo Arts",Demo Culture
+https://example.com/streamforge/demo/culture/master.m3u8

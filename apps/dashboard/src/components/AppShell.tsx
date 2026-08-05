@@ -1,24 +1,24 @@
 import { Activity, Database, HardDrive, LogOut, Tv } from "lucide-react";
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { signOut, type User } from "../lib/api";
 import { Button } from "./Button";
 
-const navigationItems = [
-  "Dashboard",
-  "Live TV",
-  "Channels",
-  "Cleanup Center",
-  "Guide",
-  "Recordings",
-  "Sources",
-  "Devices",
-  "Users and Profiles",
-  "Storage",
-  "Diagnostics",
-  "Settings",
+const navigationItems: Array<{ label: string; path?: string }> = [
+  { label: "Dashboard", path: "/" },
+  { label: "Live TV" },
+  { label: "Channels" },
+  { label: "Cleanup Center" },
+  { label: "Guide" },
+  { label: "Recordings" },
+  { label: "Sources", path: "/sources" },
+  { label: "Devices" },
+  { label: "Users and Profiles" },
+  { label: "Storage" },
+  { label: "Diagnostics" },
+  { label: "Settings" },
 ];
 
 export function AppShell({ user, children }: { user: User; children: ReactNode }) {
@@ -51,19 +51,29 @@ export function AppShell({ user, children }: { user: User; children: ReactNode }
           </div>
 
           <nav className="mt-6 grid grid-cols-2 gap-2 lg:grid-cols-1">
-            {navigationItems.map((item, index) => (
-              <button
-                key={item}
-                className={`flex min-h-10 items-center justify-between rounded-md px-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-300 ${
-                  index === 0
-                    ? "bg-zinc-800 text-white"
-                    : "cursor-not-allowed text-zinc-500"
-                }`}
-                disabled={index !== 0}
-              >
-                <span>{item}</span>
-                {index !== 0 ? <span className="text-[11px] uppercase">Later</span> : null}
-              </button>
+            {navigationItems.map((item) => (
+              item.path ? (
+                <NavLink
+                  key={item.label}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex min-h-10 items-center rounded-md px-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-300 ${
+                      isActive ? "bg-zinc-800 text-white" : "text-zinc-300 hover:bg-zinc-900"
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ) : (
+                <button
+                  key={item.label}
+                  className="flex min-h-10 cursor-not-allowed items-center justify-between rounded-md px-3 text-left text-sm text-zinc-500"
+                  disabled
+                >
+                  <span>{item.label}</span>
+                  <span className="text-[11px] uppercase">Later</span>
+                </button>
+              )
             ))}
           </nav>
         </aside>

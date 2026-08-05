@@ -116,13 +116,50 @@ class DevicePairingCode(IdMixin, TimestampMixin, Base):
 
 class Source(IdMixin, TimestampMixin, Base):
     __tablename__ = "sources"
-    __table_args__ = (Index("ix_sources_status", "status"),)
+    __table_args__ = (
+        Index("ix_sources_status", "status"),
+        Index("ix_sources_next_refresh_at", "next_refresh_at"),
+        Index("ix_sources_deleted_at", "deleted_at"),
+    )
 
     name: Mapped[str] = mapped_column(String(180), nullable=False)
     source_type: Mapped[str] = mapped_column(String(80), nullable=False)
     status: Mapped[str] = mapped_column(String(80), default="pending", nullable=False)
     config_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    secret_config_encrypted: Mapped[str | None] = mapped_column(Text)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    refresh_interval_minutes: Mapped[int | None] = mapped_column(Integer)
+    next_refresh_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_refresh_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_successful_import_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_failed_import_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    source_version: Mapped[str | None] = mapped_column(String(120))
+    checksum: Mapped[str | None] = mapped_column(String(64))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PlaylistImportJob(IdMixin, TimestampMixin, Base):
+    __tablename__ = "playlist_import_jobs"
+    __table_args__ = (
+        Index("ix_playlist_import_jobs_source_id", "source_id"),
+        Index("ix_playlist_import_jobs_status", "status"),
+        Index("ix_playlist_import_jobs_created_at", "created_at"),
+    )
+
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
+    triggered_by_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    playlist_import_id: Mapped[str | None] = mapped_column(
+        ForeignKey("playlist_imports.id", ondelete="SET NULL")
+    )
+    status: Mapped[str] = mapped_column(String(80), default="queued", nullable=False)
+    progress_percent: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    message: Mapped[str] = mapped_column(Text, default="Queued for import.", nullable=False)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    worker_id: Mapped[str | None] = mapped_column(String(120))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_reason: Mapped[str | None] = mapped_column(Text)
 
 
 class PlaylistImport(IdMixin, TimestampMixin, Base):
@@ -130,14 +167,45 @@ class PlaylistImport(IdMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_playlist_imports_source_id", "source_id"),
         Index("ix_playlist_imports_status", "status"),
+        Index("ix_playlist_imports_started_at", "started_at"),
+    )
+
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
+    triggered_by_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    source_kind: Mapped[str] = mapped_column(String(80), default="m3u_url", nullable=False)
+    status: Mapped[str] = mapped_column(String(80), default="pending", nullable=False)
+    channel_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    group_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    warning_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    failure_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    warnings_json: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    failures_json: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    checksum: Mapped[str | None] = mapped_column(String(64))
+    source_version: Mapped[str | None] = mapped_column(String(120))
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class SourceStatus(IdMixin, TimestampMixin, Base):
+    __tablename__ = "source_statuses"
+    __table_args__ = (
+        Index("ix_source_statuses_source_id", "source_id", unique=True),
+        Index("ix_source_statuses_status", "status"),
+        Index("ix_source_statuses_last_checked_at", "last_checked_at"),
     )
 
     source_id: Mapped[str] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
     status: Mapped[str] = mapped_column(String(80), default="pending", nullable=False)
+    message: Mapped[str] = mapped_column(Text, default="Source has not been imported yet.", nullable=False)
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_failure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_import_id: Mapped[str | None] = mapped_column(ForeignKey("playlist_imports.id", ondelete="SET NULL"))
+    last_job_id: Mapped[str | None] = mapped_column(ForeignKey("playlist_import_jobs.id", ondelete="SET NULL"))
     channel_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    failure_reason: Mapped[str | None] = mapped_column(Text)
+    group_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
 class ChannelGroup(IdMixin, TimestampMixin, Base):
@@ -185,6 +253,10 @@ class RawChannel(IdMixin, TimestampMixin, Base):
     original_tvg_name: Mapped[str | None] = mapped_column(String(260))
     original_logo_url: Mapped[str | None] = mapped_column(Text)
     source_metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    line_number: Mapped[int | None] = mapped_column(Integer)
+    raw_extinf: Mapped[str | None] = mapped_column(Text)
+    raw_attributes_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    url_checksum: Mapped[str | None] = mapped_column(String(64))
     normalized_name: Mapped[str | None] = mapped_column(String(260))
     normalized_group: Mapped[str | None] = mapped_column(String(220))
     inferred_country: Mapped[str | None] = mapped_column(String(80))

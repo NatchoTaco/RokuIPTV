@@ -20,6 +20,7 @@ test-results/
 *.log
 *.m3u
 *.m3u8
+!apps/api/streamforge_api/fixtures/*.m3u
 *.xmltv
 *.mp4
 *.mkv

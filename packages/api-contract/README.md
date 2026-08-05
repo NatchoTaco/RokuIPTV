@@ -1,6 +1,6 @@
 # API Contract
 
-The FastAPI OpenAPI schema can be exported with:
+`openapi.json` is the checked Milestone 1 and Milestone 2 contract snapshot. The FastAPI OpenAPI schema can be regenerated with:
 
 ```sh
 make openapi

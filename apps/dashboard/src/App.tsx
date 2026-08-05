@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { getCurrentUser, getSetupState } from "./lib/api";
+import { getCurrentUser, getSetupState, type User } from "./lib/api";
 import { DashboardPage } from "./pages/DashboardPage";
 import { SignInPage } from "./pages/SignInPage";
+import { SourcesPage } from "./pages/SourcesPage";
 import { SetupWizardPage } from "./pages/SetupWizardPage";
 
 const queryClient = new QueryClient({
@@ -51,13 +52,20 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/sign-in" element={<SignInPage />} />
-      <Route path="/" element={<ProtectedDashboard />} />
+      <Route
+        path="/"
+        element={<ProtectedPage render={(user) => <DashboardPage user={user} />} />}
+      />
+      <Route
+        path="/sources"
+        element={<ProtectedPage render={(user) => <SourcesPage user={user} />} />}
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
-function ProtectedDashboard() {
+function ProtectedPage({ render }: { render: (user: User) => JSX.Element }) {
   const userQuery = useQuery({
     queryKey: ["current-user"],
     queryFn: getCurrentUser,
@@ -71,7 +79,7 @@ function ProtectedDashboard() {
     return <Navigate to="/sign-in" replace />;
   }
 
-  return <DashboardPage user={userQuery.data} />;
+  return render(userQuery.data);
 }
 
 function FullScreenStatus({ title, detail }: { title: string; detail: string }) {

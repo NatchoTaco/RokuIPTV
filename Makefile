@@ -1,6 +1,6 @@
 COMPOSE := docker compose
 
-.PHONY: dev up down migrate api-lint api-typecheck api-test dashboard-lint dashboard-typecheck dashboard-test test health openapi
+.PHONY: dev up down migrate api-lint api-typecheck api-test dashboard-lint dashboard-typecheck dashboard-test test health openapi worker-once
 
 dev:
 	$(COMPOSE) up --build
@@ -39,3 +39,6 @@ health:
 
 openapi:
 	$(COMPOSE) run --rm api python scripts/export-openapi.py
+
+worker-once:
+	$(COMPOSE) run --rm worker python -c "from streamforge_api.worker.runner import run_once; run_once()"

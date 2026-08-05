@@ -1,6 +1,6 @@
 # StreamForge
 
-StreamForge is a private, self-hosted television management and Roku playback platform. The current implementation is limited to Milestone 1 from `STREAMFORGE_SPEC.md`.
+StreamForge is a private, self-hosted television management and Roku playback platform. The current implementation is limited to Milestones 1 and 2 from `STREAMFORGE_SPEC.md`.
 
 ## Milestone 1
 
@@ -16,6 +16,18 @@ Implemented scope:
 - Docker Compose local stack.
 
 Deferred scope is tracked in `docs/development-roadmap.md`.
+
+## Milestone 2
+
+Implemented scope:
+
+- Sources dashboard page.
+- Add Source wizard for remote M3U URL and uploaded M3U files.
+- Safe source validation with channel count, group count, warnings, failures, checksum, and estimated import time.
+- Background worker for queued playlist imports and scheduled refreshes.
+- Import history with progress and error reporting.
+- Raw channel storage without cleanup, normalization, filtering, duplicate detection, or EPG matching.
+- Synthetic demonstration playlist with example-only URLs.
 
 ## Local Development
 
@@ -37,6 +49,8 @@ Equivalent direct command:
 docker compose up --build
 ```
 
+The stack includes PostgreSQL, Redis, the API, dashboard, and source-import worker.
+
 Run migrations:
 
 ```sh
@@ -54,6 +68,18 @@ Open:
 - Dashboard: http://localhost:5173
 - API: http://localhost:8000
 - API docs: http://localhost:8000/docs
+
+Add an M3U source:
+
+1. Sign in to the dashboard.
+2. Open `Sources`.
+3. Choose `Add Source`.
+4. Enter a source name.
+5. Select `Remote M3U URL` or `Upload M3U file`.
+6. Validate the playlist.
+7. Choose `Create and import`.
+
+For a safe first import, use `Add demo` on the Sources page. It imports only the built-in synthetic playlist.
 
 Run checks:
 

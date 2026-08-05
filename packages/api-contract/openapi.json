@@ -1,0 +1,754 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "StreamForge API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Health",
+        "responses": {
+          "200": {
+            "description": "Service health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/readiness": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Readiness",
+        "responses": {
+          "200": {
+            "description": "Service is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is not ready"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/bootstrap-admin": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Create the first administrator",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BootstrapAdminRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Administrator created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-in": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Sign in",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-out": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Sign out",
+        "responses": {
+          "200": {
+            "description": "Signed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": ["auth"],
+        "summary": "Current user",
+        "responses": {
+          "200": {
+            "description": "Current dashboard user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPublic"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/setup/state": {
+      "get": {
+        "tags": ["setup"],
+        "summary": "Get setup state",
+        "responses": {
+          "200": {
+            "description": "Setup state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStateResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["setup"],
+        "summary": "Update setup state",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupStateUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated setup state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources": {
+      "get": {
+        "tags": ["sources"],
+        "summary": "List television sources",
+        "responses": {
+          "200": {
+            "description": "Source list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/validate-url": {
+      "post": {
+        "tags": ["sources"],
+        "summary": "Validate remote M3U URL",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceValidateUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/validate-upload": {
+      "post": {
+        "tags": ["sources"],
+        "summary": "Validate uploaded M3U file",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPlaylistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/m3u-url": {
+      "post": {
+        "tags": ["sources"],
+        "summary": "Create remote M3U source and queue import",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCreateUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Source created and import queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/m3u-upload": {
+      "post": {
+        "tags": ["sources"],
+        "summary": "Create uploaded M3U source and queue import",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadSourceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Source created and import queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/demo": {
+      "post": {
+        "tags": ["sources"],
+        "summary": "Create synthetic demonstration source and queue import",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCreateDemoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Demo source created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/{source_id}": {
+      "patch": {
+        "tags": ["sources"],
+        "summary": "Update source",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated source list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["sources"],
+        "summary": "Soft-delete source",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Source deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/{source_id}/refresh": {
+      "post": {
+        "tags": ["sources"],
+        "summary": "Queue manual source refresh",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Import job queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportJobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sources/{source_id}/imports": {
+      "get": {
+        "tags": ["sources"],
+        "summary": "List source import history",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Import history for source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/imports": {
+      "get": {
+        "tags": ["playlists"],
+        "summary": "List playlist import history",
+        "responses": {
+          "200": {
+            "description": "Import history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/jobs/{job_id}": {
+      "get": {
+        "tags": ["playlists"],
+        "summary": "Get playlist import job",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Import job",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportJobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/playlists/synthetic-demo.m3u": {
+      "get": {
+        "tags": ["playlists"],
+        "summary": "Get synthetic demonstration playlist",
+        "responses": {
+          "200": {
+            "description": "Synthetic M3U playlist",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthResponse": {
+        "type": "object",
+        "required": ["user", "setup"],
+        "properties": {
+          "user": { "$ref": "#/components/schemas/UserPublic" },
+          "setup": { "$ref": "#/components/schemas/SetupStateResponse" }
+        }
+      },
+      "BootstrapAdminRequest": {
+        "type": "object",
+        "required": ["email", "password", "display_name"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 12, "maxLength": 256 },
+          "display_name": { "type": "string", "minLength": 1, "maxLength": 160 }
+        }
+      },
+      "SignInRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 1, "maxLength": 256 }
+        }
+      },
+      "UserPublic": {
+        "type": "object",
+        "required": ["id", "email", "display_name", "is_admin"],
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "display_name": { "type": "string" },
+          "is_admin": { "type": "boolean" }
+        }
+      },
+      "SetupStateResponse": {
+        "type": "object",
+        "required": ["is_complete", "current_step", "completed_steps", "installation_mode", "administrator_exists"],
+        "properties": {
+          "is_complete": { "type": "boolean" },
+          "current_step": { "type": "string" },
+          "completed_steps": { "type": "array", "items": { "type": "string" } },
+          "installation_mode": { "type": ["string", "null"], "enum": ["local_only", "remote_access", null] },
+          "administrator_exists": { "type": "boolean" }
+        }
+      },
+      "SetupStateUpdate": {
+        "type": "object",
+        "required": ["installation_mode"],
+        "properties": {
+          "installation_mode": { "type": "string", "enum": ["local_only", "remote_access"] }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "service", "version", "environment", "setup_complete", "checks"],
+        "properties": {
+          "status": { "type": "string" },
+          "service": { "type": "string" },
+          "version": { "type": "string" },
+          "environment": { "type": "string" },
+          "setup_complete": { "type": "boolean" },
+          "checks": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/components/schemas/ServiceCheck" }
+          }
+        }
+      },
+      "ServiceCheck": {
+        "type": "object",
+        "required": ["status", "detail"],
+        "properties": {
+          "status": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+      "SourceValidateUrlRequest": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "UploadPlaylistRequest": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": { "type": "string", "format": "binary" }
+        }
+      },
+      "CreateUploadSourceRequest": {
+        "type": "object",
+        "required": ["name", "file"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 180 },
+          "refresh_interval_minutes": { "type": ["integer", "null"], "minimum": 15, "maximum": 43200 },
+          "file": { "type": "string", "format": "binary" }
+        }
+      },
+      "SourceCreateUrlRequest": {
+        "type": "object",
+        "required": ["name", "url"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 180 },
+          "url": { "type": "string", "format": "uri" },
+          "refresh_interval_minutes": { "type": ["integer", "null"], "minimum": 15, "maximum": 43200, "default": 1440 }
+        }
+      },
+      "SourceCreateDemoRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "default": "Synthetic Demonstration Playlist" },
+          "refresh_interval_minutes": { "type": ["integer", "null"], "minimum": 15, "maximum": 43200 }
+        }
+      },
+      "SourceUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "is_enabled": { "type": ["boolean", "null"] },
+          "refresh_interval_minutes": { "type": ["integer", "null"], "minimum": 15, "maximum": 43200 }
+        }
+      },
+      "SourceValidationResponse": {
+        "type": "object",
+        "required": ["playlist_reachable", "channel_count", "group_count", "estimated_import_time_seconds", "warnings", "errors", "checksum", "source_version"],
+        "properties": {
+          "playlist_reachable": { "type": "boolean" },
+          "channel_count": { "type": "integer" },
+          "group_count": { "type": "integer" },
+          "estimated_import_time_seconds": { "type": "integer" },
+          "warnings": { "type": "array", "items": { "type": "string" } },
+          "errors": { "type": "array", "items": { "type": "string" } },
+          "checksum": { "type": ["string", "null"] },
+          "source_version": { "type": ["string", "null"] }
+        }
+      },
+      "SourceListResponse": {
+        "type": "object",
+        "required": ["sources"],
+        "properties": {
+          "sources": { "type": "array", "items": { "$ref": "#/components/schemas/SourceSummaryResponse" } }
+        }
+      },
+      "SourceCreatedResponse": {
+        "type": "object",
+        "required": ["source", "job"],
+        "properties": {
+          "source": { "$ref": "#/components/schemas/SourceSummaryResponse" },
+          "job": { "$ref": "#/components/schemas/PlaylistImportJobResponse" }
+        }
+      },
+      "SourceSummaryResponse": {
+        "type": "object",
+        "required": ["id", "name", "source_type", "status", "status_message", "display_location", "is_enabled", "refresh_interval_minutes", "last_updated_at", "last_refresh_at", "next_refresh_at", "last_error", "channel_count", "group_count", "active_job"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "source_type": { "type": "string", "enum": ["m3u_url", "m3u_upload", "demo_playlist"] },
+          "status": { "type": "string", "enum": ["healthy", "importing", "warning", "offline", "failed", "disabled", "pending"] },
+          "status_message": { "type": "string" },
+          "display_location": { "type": "string" },
+          "is_enabled": { "type": "boolean" },
+          "refresh_interval_minutes": { "type": ["integer", "null"] },
+          "last_updated_at": { "type": "string", "format": "date-time" },
+          "last_refresh_at": { "type": ["string", "null"], "format": "date-time" },
+          "next_refresh_at": { "type": ["string", "null"], "format": "date-time" },
+          "last_error": { "type": ["string", "null"] },
+          "channel_count": { "type": "integer" },
+          "group_count": { "type": "integer" },
+          "active_job": { "anyOf": [{ "$ref": "#/components/schemas/PlaylistImportJobResponse" }, { "type": "null" }] }
+        }
+      },
+      "PlaylistImportJobResponse": {
+        "type": "object",
+        "required": ["id", "source_id", "playlist_import_id", "status", "progress_percent", "message", "started_at", "completed_at", "failure_reason"],
+        "properties": {
+          "id": { "type": "string" },
+          "source_id": { "type": "string" },
+          "playlist_import_id": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["queued", "running", "succeeded", "failed"] },
+          "progress_percent": { "type": "integer" },
+          "message": { "type": "string" },
+          "started_at": { "type": ["string", "null"], "format": "date-time" },
+          "completed_at": { "type": ["string", "null"], "format": "date-time" },
+          "failure_reason": { "type": ["string", "null"] }
+        }
+      },
+      "PlaylistImportHistoryResponse": {
+        "type": "object",
+        "required": ["imports"],
+        "properties": {
+          "imports": { "type": "array", "items": { "$ref": "#/components/schemas/PlaylistImportHistoryItem" } }
+        }
+      },
+      "PlaylistImportHistoryItem": {
+        "type": "object",
+        "required": ["id", "source_id", "source_name", "source_kind", "status", "started_at", "completed_at", "duration_ms", "channel_count", "group_count", "warning_count", "failure_count", "warnings", "failures", "failure_reason", "checksum", "source_version"],
+        "properties": {
+          "id": { "type": "string" },
+          "source_id": { "type": "string" },
+          "source_name": { "type": "string" },
+          "source_kind": { "type": "string", "enum": ["m3u_url", "m3u_upload", "demo_playlist"] },
+          "status": { "type": "string", "enum": ["queued", "running", "completed", "warning", "failed"] },
+          "started_at": { "type": ["string", "null"], "format": "date-time" },
+          "completed_at": { "type": ["string", "null"], "format": "date-time" },
+          "duration_ms": { "type": ["integer", "null"] },
+          "channel_count": { "type": "integer" },
+          "group_count": { "type": "integer" },
+          "warning_count": { "type": "integer" },
+          "failure_count": { "type": "integer" },
+          "warnings": { "type": "array", "items": { "type": "string" } },
+          "failures": { "type": "array", "items": { "type": "string" } },
+          "failure_reason": { "type": ["string", "null"] },
+          "checksum": { "type": ["string", "null"] },
+          "source_version": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

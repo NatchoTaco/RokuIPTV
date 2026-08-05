@@ -43,6 +43,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - streamforge_source_uploads:/app/data/uploads
     command:
       [
         "uvicorn",
@@ -83,7 +84,24 @@ services:
       - streamforge_dashboard_node_modules:/app/apps/dashboard/node_modules
     command: ["npm", "run", "dev"]
 
+  worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - streamforge_source_uploads:/app/data/uploads
+    command: ["python", "-m", "streamforge_api.worker.runner"]
+
 volumes:
   streamforge_postgres_data:
   streamforge_redis_data:
   streamforge_dashboard_node_modules:
+  streamforge_source_uploads:

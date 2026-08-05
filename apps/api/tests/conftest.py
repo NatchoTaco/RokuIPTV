@@ -18,7 +18,7 @@ class FakeRedis:
 
 
 @pytest.fixture
-def client() -> Generator[TestClient]:
+def client(tmp_path) -> Generator[TestClient]:
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -31,6 +31,8 @@ def client() -> Generator[TestClient]:
         database_url="sqlite://",
         redis_url="redis://localhost:6379/0",
         cors_origins="http://localhost:5173",
+        source_upload_dir=str(tmp_path / "uploads"),
+        allow_private_source_urls=True,
     )
 
     app = create_app(

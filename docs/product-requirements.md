@@ -47,11 +47,29 @@ Milestone 1 must deliver a runnable foundation:
 - Frontend type checking and tests pass.
 - No critical security shortcuts are left undocumented.
 
+## Milestone 2 Requirements
+
+Milestone 2 delivers source management and playlist ingestion:
+
+- Fully functional dashboard Sources page.
+- Add Source wizard for source name, remote/upload choice, and source validation.
+- Remote M3U URL source support.
+- Uploaded M3U file source support.
+- Safe URL validation with unsupported protocol and private-network rejection by default.
+- Asynchronous playlist import jobs processed by the background worker.
+- Playlist import history with start time, completion time, duration, channels, groups, warnings, failures, checksum, and source version.
+- Raw channel storage preserving provider metadata exactly as imported.
+- Playlist refresh scheduling.
+- Source status monitoring and human-readable error reporting.
+- Synthetic demonstration playlist containing only example, non-provider URLs.
+- Unit tests for parser, URL safety, and source import behavior.
+
+Milestone 2 explicitly does not perform cleanup, duplicate detection, normalization, filtering, EPG matching, playback, recording, timeshift, or Roku work.
+
 ## Deferred Product Areas
 
-The following are deliberately deferred beyond Milestone 1:
+The following are deliberately deferred beyond Milestone 2:
 
-- Sources, playlist ingestion, and import jobs.
 - Cleanup Center, filter rules, duplicate detection, and channel manager.
 - XMLTV guide ingestion and mapping.
 - Stream probing, quality scoring, and playback gateway.

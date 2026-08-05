@@ -1,8 +1,8 @@
 # StreamForge Security Model
 
-## Milestone 1 Security Scope
+## Implemented Security Scope
 
-Milestone 1 implements secure local administrator authentication and session management for the dashboard.
+Milestone 1 implements secure local administrator authentication and session management for the dashboard. Milestone 2 adds administrator-only source management, source URL validation, encrypted source secrets, and redacted source responses.
 
 Implemented controls:
 
@@ -15,10 +15,17 @@ Implemented controls:
 - Structured JSON logs.
 - No secrets returned by public settings or diagnostics endpoints.
 - Bootstrap administrator endpoint blocked after setup completion or after an administrator exists.
+- Source management APIs require an authenticated administrator.
+- Remote source URLs are encrypted at rest using a mature authenticated-encryption library and a key derived from `STREAMFORGE_SECRET_KEY`.
+- Source URLs are redacted before returning to the dashboard.
+- Unsupported protocols, local file URLs, invalid URL paths, and private/reserved network destinations are rejected by default for remote playlist fetches.
+- Uploaded playlists are stored with generated sanitized names under `STREAMFORGE_SOURCE_UPLOAD_DIR`.
 
 ## Configuration
 
 Production deployments must provide a strong `STREAMFORGE_SECRET_KEY`. Development has a default key only for local use. CORS origins are restricted by configuration.
+
+`STREAMFORGE_ALLOW_PRIVATE_SOURCE_URLS=false` is the secure default. Home-lab operators can set it to `true` only when they intentionally need to import from trusted private-network playlist servers.
 
 ## Secret Handling
 
@@ -42,7 +49,5 @@ The following controls are required by the specification but deferred until the 
 - Device-specific Roku credentials.
 - Revocable device sessions.
 - Short-lived signed playback authorization.
-- Encrypted provider secrets at rest.
-- SSRF protection for administrator-supplied provider URLs.
-- Private-network destination policies.
+- Expanded source allowlists and per-source network policy overrides.
 - Diagnostic bundle redaction.

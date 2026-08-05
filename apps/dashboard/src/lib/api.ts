@@ -7,6 +7,19 @@ const serviceCheckSchema = z.object({
   detail: z.string(),
 });
 
+const sourceTypeSchema = z.enum(["m3u_url", "m3u_upload", "demo_playlist"]);
+const sourceStateSchema = z.enum([
+  "healthy",
+  "importing",
+  "warning",
+  "offline",
+  "failed",
+  "disabled",
+  "pending",
+]);
+const importJobStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
+const playlistImportStateSchema = z.enum(["queued", "running", "completed", "warning", "failed"]);
+
 export const setupStateSchema = z.object({
   is_complete: z.boolean(),
   current_step: z.string(),
@@ -42,11 +55,94 @@ export const publicSettingsSchema = z.object({
   environment: z.string(),
 });
 
+export const sourceValidationSchema = z.object({
+  playlist_reachable: z.boolean(),
+  channel_count: z.number(),
+  group_count: z.number(),
+  estimated_import_time_seconds: z.number(),
+  warnings: z.array(z.string()),
+  errors: z.array(z.string()),
+  checksum: z.string().nullable(),
+  source_version: z.string().nullable(),
+});
+
+export const playlistImportJobSchema = z.object({
+  id: z.string(),
+  source_id: z.string(),
+  playlist_import_id: z.string().nullable(),
+  status: importJobStateSchema,
+  progress_percent: z.number(),
+  message: z.string(),
+  started_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  failure_reason: z.string().nullable(),
+});
+
+export const sourceSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  source_type: sourceTypeSchema,
+  status: sourceStateSchema,
+  status_message: z.string(),
+  display_location: z.string(),
+  is_enabled: z.boolean(),
+  refresh_interval_minutes: z.number().nullable(),
+  last_updated_at: z.string(),
+  last_refresh_at: z.string().nullable(),
+  next_refresh_at: z.string().nullable(),
+  last_error: z.string().nullable(),
+  channel_count: z.number(),
+  group_count: z.number(),
+  active_job: playlistImportJobSchema.nullable(),
+});
+
+export const sourceListSchema = z.object({
+  sources: z.array(sourceSummarySchema),
+});
+
+export const sourceCreatedSchema = z.object({
+  source: sourceSummarySchema,
+  job: playlistImportJobSchema,
+});
+
+export const playlistImportHistoryItemSchema = z.object({
+  id: z.string(),
+  source_id: z.string(),
+  source_name: z.string(),
+  source_kind: sourceTypeSchema,
+  status: playlistImportStateSchema,
+  started_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  duration_ms: z.number().nullable(),
+  channel_count: z.number(),
+  group_count: z.number(),
+  warning_count: z.number(),
+  failure_count: z.number(),
+  warnings: z.array(z.string()),
+  failures: z.array(z.string()),
+  failure_reason: z.string().nullable(),
+  checksum: z.string().nullable(),
+  source_version: z.string().nullable(),
+});
+
+export const playlistImportHistorySchema = z.object({
+  imports: z.array(playlistImportHistoryItemSchema),
+});
+
 export type SetupState = z.infer<typeof setupStateSchema>;
 export type User = z.infer<typeof userSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 export type PublicSettings = z.infer<typeof publicSettingsSchema>;
+export type SourceType = z.infer<typeof sourceTypeSchema>;
+export type SourceState = z.infer<typeof sourceStateSchema>;
+export type SourceValidation = z.infer<typeof sourceValidationSchema>;
+export type PlaylistImportJob = z.infer<typeof playlistImportJobSchema>;
+export type SourceSummary = z.infer<typeof sourceSummarySchema>;
+export type SourceList = z.infer<typeof sourceListSchema>;
+export type SourceCreated = z.infer<typeof sourceCreatedSchema>;
+export type PlaylistImportHistoryItem = z.infer<typeof playlistImportHistoryItemSchema>;
+export type PlaylistImportHistory = z.infer<typeof playlistImportHistorySchema>;
 
 export class ApiError extends Error {
   constructor(
@@ -63,13 +159,16 @@ async function fetchJson<T>(
   schema: z.ZodType<T>,
   init: RequestInit = {},
 ): Promise<T> {
+  const isFormData = init.body instanceof FormData;
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
+    headers: isFormData
+      ? init.headers
+      : {
+          "Content-Type": "application/json",
+          ...init.headers,
+        },
   });
 
   const body = await response.json().catch(() => null);
@@ -127,4 +226,89 @@ export function getHealth(): Promise<HealthResponse> {
 
 export function getPublicSettings(): Promise<PublicSettings> {
   return fetchJson("/api/v1/settings/public", publicSettingsSchema);
+}
+
+export function listSources(): Promise<SourceList> {
+  return fetchJson("/api/v1/sources", sourceListSchema);
+}
+
+export function validateM3uUrl(url: string): Promise<SourceValidation> {
+  return fetchJson("/api/v1/sources/validate-url", sourceValidationSchema, {
+    method: "POST",
+    body: JSON.stringify({ url }),
+  });
+}
+
+export function validateM3uUpload(file: File): Promise<SourceValidation> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return fetchJson("/api/v1/sources/validate-upload", sourceValidationSchema, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export function createM3uUrlSource(payload: {
+  name: string;
+  url: string;
+  refresh_interval_minutes: number | null;
+}): Promise<SourceCreated> {
+  return fetchJson("/api/v1/sources/m3u-url", sourceCreatedSchema, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createM3uUploadSource(payload: {
+  name: string;
+  file: File;
+  refresh_interval_minutes: number | null;
+}): Promise<SourceCreated> {
+  const formData = new FormData();
+  formData.append("name", payload.name);
+  if (payload.refresh_interval_minutes !== null) {
+    formData.append("refresh_interval_minutes", String(payload.refresh_interval_minutes));
+  }
+  formData.append("file", payload.file);
+  return fetchJson("/api/v1/sources/m3u-upload", sourceCreatedSchema, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export function createDemoSource(): Promise<SourceCreated> {
+  return fetchJson("/api/v1/sources/demo", sourceCreatedSchema, {
+    method: "POST",
+    body: JSON.stringify({ name: "Synthetic Demonstration Playlist", refresh_interval_minutes: null }),
+  });
+}
+
+export function refreshSource(sourceId: string): Promise<PlaylistImportJob> {
+  return fetchJson(`/api/v1/sources/${sourceId}/refresh`, playlistImportJobSchema, {
+    method: "POST",
+  });
+}
+
+export function updateSource(
+  sourceId: string,
+  payload: { is_enabled?: boolean; refresh_interval_minutes?: number | null },
+): Promise<SourceList> {
+  return fetchJson(`/api/v1/sources/${sourceId}`, sourceListSchema, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteSource(sourceId: string): Promise<{ message: string }> {
+  return fetchJson(`/api/v1/sources/${sourceId}`, z.object({ message: z.string() }), {
+    method: "DELETE",
+  });
+}
+
+export function listImportHistory(): Promise<PlaylistImportHistory> {
+  return fetchJson("/api/v1/playlists/imports", playlistImportHistorySchema);
+}
+
+export function getImportJob(jobId: string): Promise<PlaylistImportJob> {
+  return fetchJson(`/api/v1/playlists/jobs/${jobId}`, playlistImportJobSchema);
 }
