@@ -66,11 +66,31 @@ Milestone 2 delivers source management and playlist ingestion:
 
 Milestone 2 explicitly does not perform cleanup, duplicate detection, normalization, filtering, EPG matching, playback, recording, timeshift, or Roku work.
 
+## Milestone 3 Requirements
+
+Milestone 3 delivers channel normalization and cleanup:
+
+- Deterministic normalization preserving original provider records.
+- Standard channel groups and group inference when `group-title` is missing or generic.
+- Live TV, Movie, Series, and Unknown classification, including Unknown entries that are likely live channels.
+- Provider prefix/suffix cleanup, quality-label extraction, country/language inference, and Unicode-safe names.
+- Explainable filter decisions with Light, Recommended, Aggressive, and Custom profiles.
+- Manual allowlist and blocklist overrides, with allowlist decisions taking precedence over automatic cleanup.
+- Conservative duplicate clustering that does not merge merely identical names.
+- Curated channels and source candidates with primary/backup ranking.
+- Channels dashboard page with search, filtering, sorting-friendly metadata, pagination, bulk visibility actions, manual rename/group, allow/hide, and candidate review.
+- Cleanup Center queues for duplicates, malformed names, test/backup streams, low-quality duplicates, unclassified rows, suspected adult rows, shopping/religious rows, foreign-language rows, newly imported rows, and automatically hidden rows.
+- Preview and Apply behavior for cleanup profiles.
+- Normalization jobs with progress and cancellation reporting.
+- Idempotent reruns without uncontrolled generated-row duplication.
+- Tests for normalization variants, duplicate avoidance, filtering precedence, and large generated datasets.
+
+Milestone 3 explicitly does not perform XMLTV ingestion, EPG matching, stream probing, playback, recording, timeshift, or Roku work.
+
 ## Deferred Product Areas
 
-The following are deliberately deferred beyond Milestone 2:
+The following are deliberately deferred beyond Milestone 3:
 
-- Cleanup Center, filter rules, duplicate detection, and channel manager.
 - XMLTV guide ingestion and mapping.
 - Stream probing, quality scoring, and playback gateway.
 - Roku MVP.

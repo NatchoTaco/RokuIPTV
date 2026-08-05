@@ -57,6 +57,30 @@ Source endpoints require an authenticated administrator. Raw source secrets are 
 
 Playlist endpoints require an authenticated administrator.
 
+### Channels
+
+- `GET /api/v1/channels`
+- `GET /api/v1/channels/groups`
+- `POST /api/v1/channels/normalization-jobs`
+- `GET /api/v1/channels/normalization-jobs/{job_id}`
+- `POST /api/v1/channels/normalization-jobs/{job_id}/cancel`
+- `PATCH /api/v1/channels/{raw_channel_id}`
+- `GET /api/v1/channels/{raw_channel_id}/candidates`
+
+Channel endpoints require an authenticated administrator. They expose original and normalized names, inferred group/country/language/category, content type, quality label, duplicate state, visibility state, checksums, and explanations. They never return raw stream URLs.
+
+### Cleanup
+
+- `GET /api/v1/cleanup/queues`
+- `POST /api/v1/cleanup/preview`
+- `POST /api/v1/cleanup/apply`
+- `GET /api/v1/cleanup/duplicates`
+- `POST /api/v1/cleanup/duplicates/{cluster_id}/merge`
+- `POST /api/v1/cleanup/duplicates/{cluster_id}/split`
+- `POST /api/v1/cleanup/duplicates/{cluster_id}/protect`
+
+Cleanup endpoints require an authenticated administrator. Preview reports the effect of Light, Recommended, Aggressive, or Custom profiles before applying. Apply reruns normalization with the selected profile and rebuilds generated curated lineup rows without deleting raw provider records.
+
 ## Milestone 2 Source Payloads
 
 `POST /api/v1/sources/validate-url` accepts:
@@ -122,14 +146,43 @@ Import history responses include:
 - checksum
 - source version
 
+## Milestone 3 Channel Payloads
+
+`GET /api/v1/channels` supports bounded cursor pagination and filters:
+
+- `cursor`
+- `page_size`
+- `search`
+- `source_id`
+- `group`
+- `visibility_status`
+- `content_type`
+- `duplicate_status`
+
+`POST /api/v1/channels/normalization-jobs` accepts:
+
+- `source_id`
+- `profile`
+- `process_now`
+
+Normalization job responses include status, progress, processed/total counts, started/completed/canceled timestamps, failure reason, and aggregate stats.
+
+`PATCH /api/v1/channels/{raw_channel_id}` accepts manual overrides:
+
+- `display_name`
+- `group_name`
+- `visibility_status`
+- `protected_from_auto_merge`
+
+Manual allowlist visibility overrides automatic cleanup. Manual hidden decisions behave as a blocklist. Source candidate responses include ranking, role, selection reason, metadata, and URL checksum only.
+
+Cleanup profile payloads accept `profile` and optional `source_id`. Responses include total channels, channels that would be hidden or allowed, protected counts, sample channel IDs, and reason counts.
+
 ## Future Endpoint Areas
 
 The specification reserves these `/api/v1` areas for later milestones:
 
 - `/epg-sources`
-- `/channels`
-- `/channel-groups`
-- `/cleanup`
 - `/guide`
 - `/recordings`
 - `/recording-rules`

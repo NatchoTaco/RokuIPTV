@@ -162,6 +162,29 @@ class PlaylistImportJob(IdMixin, TimestampMixin, Base):
     failure_reason: Mapped[str | None] = mapped_column(Text)
 
 
+class NormalizationJob(IdMixin, TimestampMixin, Base):
+    __tablename__ = "normalization_jobs"
+    __table_args__ = (
+        Index("ix_normalization_jobs_source_id", "source_id"),
+        Index("ix_normalization_jobs_status", "status"),
+        Index("ix_normalization_jobs_created_at", "created_at"),
+    )
+
+    source_id: Mapped[str | None] = mapped_column(ForeignKey("sources.id", ondelete="SET NULL"))
+    status: Mapped[str] = mapped_column(String(80), default="queued", nullable=False)
+    profile: Mapped[str] = mapped_column(String(80), default="recommended", nullable=False)
+    progress_percent: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    message: Mapped[str] = mapped_column(Text, default="Queued for normalization.", nullable=False)
+    total_raw_channels: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    processed_raw_channels: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    worker_id: Mapped[str | None] = mapped_column(String(120))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    canceled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_reason: Mapped[str | None] = mapped_column(Text)
+    stats_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+
+
 class PlaylistImport(IdMixin, TimestampMixin, Base):
     __tablename__ = "playlist_imports"
     __table_args__ = (
@@ -220,12 +243,18 @@ class ChannelGroup(IdMixin, TimestampMixin, Base):
 
 class DuplicateCluster(IdMixin, TimestampMixin, Base):
     __tablename__ = "duplicate_clusters"
-    __table_args__ = (Index("ix_duplicate_clusters_confidence", "confidence_score"),)
+    __table_args__ = (
+        Index("ix_duplicate_clusters_confidence", "confidence_score"),
+        Index("ix_duplicate_clusters_review_status", "review_status"),
+    )
 
     label: Mapped[str] = mapped_column(String(220), nullable=False)
     confidence_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     review_status: Mapped[str] = mapped_column(String(80), default="pending", nullable=False)
+    candidate_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    primary_raw_channel_id: Mapped[str | None] = mapped_column(String(36))
     explanation_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    stats_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
 
 class RawChannel(IdMixin, TimestampMixin, Base):
@@ -233,10 +262,17 @@ class RawChannel(IdMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_raw_channels_source_id", "source_id"),
         Index("ix_raw_channels_normalized_name", "normalized_name"),
+        Index("ix_raw_channels_normalized_key", "normalized_key"),
         Index("ix_raw_channels_normalized_group", "normalized_group"),
+        Index("ix_raw_channels_content_type", "content_type"),
+        Index("ix_raw_channels_inferred_country", "inferred_country"),
+        Index("ix_raw_channels_inferred_language", "inferred_language"),
+        Index("ix_raw_channels_inferred_category", "inferred_category"),
+        Index("ix_raw_channels_claimed_quality", "claimed_quality"),
         Index("ix_raw_channels_visibility_status", "visibility_status"),
         Index("ix_raw_channels_health_status", "health_status"),
         Index("ix_raw_channels_duplicate_cluster_id", "duplicate_cluster_id"),
+        Index("ix_raw_channels_normalization_job_id", "normalization_job_id"),
     )
 
     source_id: Mapped[str] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
@@ -245,6 +281,9 @@ class RawChannel(IdMixin, TimestampMixin, Base):
     )
     duplicate_cluster_id: Mapped[str | None] = mapped_column(
         ForeignKey("duplicate_clusters.id", ondelete="SET NULL")
+    )
+    normalization_job_id: Mapped[str | None] = mapped_column(
+        ForeignKey("normalization_jobs.id", ondelete="SET NULL")
     )
     original_name: Mapped[str] = mapped_column(String(260), nullable=False)
     original_group: Mapped[str | None] = mapped_column(String(220))
@@ -258,11 +297,23 @@ class RawChannel(IdMixin, TimestampMixin, Base):
     raw_attributes_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
     url_checksum: Mapped[str | None] = mapped_column(String(64))
     normalized_name: Mapped[str | None] = mapped_column(String(260))
+    normalized_key: Mapped[str | None] = mapped_column(String(260))
     normalized_group: Mapped[str | None] = mapped_column(String(220))
+    content_type: Mapped[str] = mapped_column(String(80), default="unknown", nullable=False)
     inferred_country: Mapped[str | None] = mapped_column(String(80))
     inferred_language: Mapped[str | None] = mapped_column(String(80))
     inferred_category: Mapped[str | None] = mapped_column(String(120))
     claimed_quality: Mapped[str | None] = mapped_column(String(80))
+    normalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    normalization_explanations_json: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON,
+        default=list,
+        nullable=False,
+    )
+    manual_display_name: Mapped[str | None] = mapped_column(String(260))
+    manual_group_name: Mapped[str | None] = mapped_column(String(220))
+    manual_visibility_status: Mapped[str | None] = mapped_column(String(80))
+    protected_from_auto_merge: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     measured_resolution: Mapped[str | None] = mapped_column(String(80))
     measured_frame_rate: Mapped[float | None] = mapped_column(Float)
     codec_information_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
@@ -292,8 +343,10 @@ class CuratedChannel(IdMixin, TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(260), nullable=False)
     normalized_name: Mapped[str] = mapped_column(String(260), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(80), default="live_tv", nullable=False)
     logo_url: Mapped[str | None] = mapped_column(Text)
     visibility_status: Mapped[str] = mapped_column(String(80), default="visible", nullable=False)
+    source_candidate_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
@@ -303,6 +356,7 @@ class ChannelSourceCandidate(IdMixin, TimestampMixin, Base):
         Index("ix_channel_source_candidates_curated_channel_id", "curated_channel_id"),
         Index("ix_channel_source_candidates_raw_channel_id", "raw_channel_id"),
         Index("ix_channel_source_candidates_rank", "rank"),
+        UniqueConstraint("raw_channel_id", name="uq_channel_source_candidates_raw_channel"),
     )
 
     curated_channel_id: Mapped[str] = mapped_column(

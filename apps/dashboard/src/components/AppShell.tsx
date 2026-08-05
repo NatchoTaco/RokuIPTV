@@ -9,8 +9,8 @@ import { Button } from "./Button";
 const navigationItems: Array<{ label: string; path?: string }> = [
   { label: "Dashboard", path: "/" },
   { label: "Live TV" },
-  { label: "Channels" },
-  { label: "Cleanup Center" },
+  { label: "Channels", path: "/channels" },
+  { label: "Cleanup Center", path: "/cleanup" },
   { label: "Guide" },
   { label: "Recordings" },
   { label: "Sources", path: "/sources" },

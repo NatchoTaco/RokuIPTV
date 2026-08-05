@@ -20,6 +20,8 @@ const sourceStateSchema = z.enum([
 const importJobStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
 const playlistImportStateSchema = z.enum(["queued", "running", "completed", "warning", "failed"]);
 const contentTypeSchema = z.enum(["live_tv", "movie", "series", "unknown"]);
+const filterProfileSchema = z.enum(["light", "recommended", "aggressive", "custom"]);
+const normalizationJobStateSchema = z.enum(["queued", "running", "succeeded", "failed", "canceled"]);
 
 export const setupStateSchema = z.object({
   is_complete: z.boolean(),
@@ -142,6 +144,130 @@ export const playlistImportHistorySchema = z.object({
   imports: z.array(playlistImportHistoryItemSchema),
 });
 
+export const channelSummarySchema = z.object({
+  id: z.string(),
+  source_id: z.string(),
+  source_name: z.string().nullable(),
+  original_name: z.string(),
+  normalized_name: z.string().nullable(),
+  normalized_group: z.string().nullable(),
+  content_type: contentTypeSchema,
+  inferred_country: z.string().nullable(),
+  inferred_language: z.string().nullable(),
+  inferred_category: z.string().nullable(),
+  claimed_quality: z.string().nullable(),
+  visibility_status: z.string(),
+  duplicate_cluster_id: z.string().nullable(),
+  url_checksum: z.string().nullable(),
+  original_tvg_id: z.string().nullable(),
+  original_tvg_name: z.string().nullable(),
+  original_logo_url: z.string().nullable(),
+  line_number: z.number().nullable(),
+  normalized_at: z.string().nullable(),
+  explanations: z.array(z.record(z.string())),
+  filtering_reasons: z.array(z.record(z.unknown())),
+});
+
+export const channelListSchema = z.object({
+  items: z.array(channelSummarySchema),
+  next_cursor: z.string().nullable(),
+  total_count: z.number(),
+  page_size: z.number(),
+});
+
+export const channelGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  normalized_name: z.string(),
+  sort_order: z.number(),
+  is_visible: z.boolean(),
+});
+
+export const channelGroupListSchema = z.object({
+  groups: z.array(channelGroupSchema),
+});
+
+export const channelSourceCandidateSchema = z.object({
+  id: z.string(),
+  raw_channel_id: z.string(),
+  curated_channel_id: z.string(),
+  role: z.string(),
+  rank: z.number(),
+  selection_reason: z.string().nullable(),
+  original_name: z.string(),
+  normalized_name: z.string().nullable(),
+  normalized_group: z.string().nullable(),
+  content_type: contentTypeSchema,
+  claimed_quality: z.string().nullable(),
+  url_checksum: z.string().nullable(),
+  attributes: z.record(z.unknown()),
+});
+
+export const channelSourceCandidateListSchema = z.object({
+  candidates: z.array(channelSourceCandidateSchema),
+});
+
+export const normalizationJobSchema = z.object({
+  id: z.string(),
+  source_id: z.string().nullable(),
+  status: normalizationJobStateSchema,
+  profile: filterProfileSchema,
+  progress_percent: z.number(),
+  message: z.string(),
+  total_raw_channels: z.number(),
+  processed_raw_channels: z.number(),
+  started_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  canceled_at: z.string().nullable(),
+  failure_reason: z.string().nullable(),
+  stats: z.record(z.unknown()),
+});
+
+export const cleanupQueueSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  count: z.number(),
+  description: z.string(),
+});
+
+export const cleanupQueuesSchema = z.object({
+  queues: z.array(cleanupQueueSchema),
+});
+
+export const cleanupPreviewSchema = z.object({
+  profile: filterProfileSchema,
+  source_id: z.string().nullable(),
+  total_channels: z.number(),
+  would_hide: z.number(),
+  would_allow: z.number(),
+  protected_count: z.number(),
+  sample_channel_ids: z.array(z.string()),
+  reasons: z.record(z.number()),
+});
+
+export const cleanupApplySchema = cleanupPreviewSchema.extend({
+  applied: z.boolean(),
+});
+
+export const duplicateClusterSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  confidence_score: z.number(),
+  review_status: z.string(),
+  candidate_count: z.number(),
+  primary_raw_channel_id: z.string().nullable(),
+  explanations: z.array(z.record(z.unknown())),
+});
+
+export const duplicateClusterListSchema = z.object({
+  clusters: z.array(duplicateClusterSchema),
+});
+
+export const duplicateActionSchema = z.object({
+  cluster: duplicateClusterSchema,
+  message: z.string(),
+});
+
 export type SetupState = z.infer<typeof setupStateSchema>;
 export type User = z.infer<typeof userSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
@@ -157,6 +283,16 @@ export type SourceList = z.infer<typeof sourceListSchema>;
 export type SourceCreated = z.infer<typeof sourceCreatedSchema>;
 export type PlaylistImportHistoryItem = z.infer<typeof playlistImportHistoryItemSchema>;
 export type PlaylistImportHistory = z.infer<typeof playlistImportHistorySchema>;
+export type FilterProfile = z.infer<typeof filterProfileSchema>;
+export type ChannelSummary = z.infer<typeof channelSummarySchema>;
+export type ChannelList = z.infer<typeof channelListSchema>;
+export type ChannelGroup = z.infer<typeof channelGroupSchema>;
+export type ChannelSourceCandidate = z.infer<typeof channelSourceCandidateSchema>;
+export type NormalizationJob = z.infer<typeof normalizationJobSchema>;
+export type CleanupQueue = z.infer<typeof cleanupQueueSchema>;
+export type CleanupPreview = z.infer<typeof cleanupPreviewSchema>;
+export type CleanupApply = z.infer<typeof cleanupApplySchema>;
+export type DuplicateCluster = z.infer<typeof duplicateClusterSchema>;
 
 export class ApiError extends Error {
   constructor(
@@ -337,4 +473,102 @@ export function listImportHistory(): Promise<PlaylistImportHistory> {
 
 export function getImportJob(jobId: string): Promise<PlaylistImportJob> {
   return fetchJson(`/api/v1/playlists/jobs/${jobId}`, playlistImportJobSchema);
+}
+
+export function listChannels(params: {
+  cursor?: string | null;
+  page_size?: number;
+  search?: string;
+  source_id?: string;
+  group?: string;
+  visibility_status?: string;
+  content_type?: ContentType;
+  duplicate_status?: "duplicates" | "unique";
+} = {}): Promise<ChannelList> {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  });
+  const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
+  return fetchJson(`/api/v1/channels${suffix}`, channelListSchema);
+}
+
+export function listChannelGroups(): Promise<{ groups: ChannelGroup[] }> {
+  return fetchJson("/api/v1/channels/groups", channelGroupListSchema);
+}
+
+export function createNormalizationJob(payload: {
+  source_id?: string | null;
+  profile: FilterProfile;
+  process_now: boolean;
+}): Promise<NormalizationJob> {
+  return fetchJson("/api/v1/channels/normalization-jobs", normalizationJobSchema, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getNormalizationJob(jobId: string): Promise<NormalizationJob> {
+  return fetchJson(`/api/v1/channels/normalization-jobs/${jobId}`, normalizationJobSchema);
+}
+
+export function updateChannel(
+  channelId: string,
+  payload: {
+    display_name?: string;
+    group_name?: string;
+    visibility_status?: "visible" | "hidden" | "always_visible";
+    protected_from_auto_merge?: boolean;
+  },
+): Promise<ChannelSummary> {
+  return fetchJson(`/api/v1/channels/${channelId}`, channelSummarySchema, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listChannelSourceCandidates(channelId: string): Promise<{ candidates: ChannelSourceCandidate[] }> {
+  return fetchJson(`/api/v1/channels/${channelId}/candidates`, channelSourceCandidateListSchema);
+}
+
+export function listCleanupQueues(): Promise<{ queues: CleanupQueue[] }> {
+  return fetchJson("/api/v1/cleanup/queues", cleanupQueuesSchema);
+}
+
+export function previewCleanupProfile(profile: FilterProfile): Promise<CleanupPreview> {
+  return fetchJson("/api/v1/cleanup/preview", cleanupPreviewSchema, {
+    method: "POST",
+    body: JSON.stringify({ profile }),
+  });
+}
+
+export function applyCleanupProfile(profile: FilterProfile): Promise<CleanupApply> {
+  return fetchJson("/api/v1/cleanup/apply", cleanupApplySchema, {
+    method: "POST",
+    body: JSON.stringify({ profile }),
+  });
+}
+
+export function listDuplicateClusters(): Promise<{ clusters: DuplicateCluster[] }> {
+  return fetchJson("/api/v1/cleanup/duplicates", duplicateClusterListSchema);
+}
+
+export function protectDuplicateCluster(clusterId: string): Promise<{ cluster: DuplicateCluster; message: string }> {
+  return fetchJson(`/api/v1/cleanup/duplicates/${clusterId}/protect`, duplicateActionSchema, {
+    method: "POST",
+  });
+}
+
+export function mergeDuplicateCluster(clusterId: string): Promise<{ cluster: DuplicateCluster; message: string }> {
+  return fetchJson(`/api/v1/cleanup/duplicates/${clusterId}/merge`, duplicateActionSchema, {
+    method: "POST",
+  });
+}
+
+export function splitDuplicateCluster(clusterId: string): Promise<{ cluster: DuplicateCluster; message: string }> {
+  return fetchJson(`/api/v1/cleanup/duplicates/${clusterId}/split`, duplicateActionSchema, {
+    method: "POST",
+  });
 }

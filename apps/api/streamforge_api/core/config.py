@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     source_import_confirmation_threshold_entries: int = Field(default=50_000, ge=1)
     source_import_batch_size: int = Field(default=1_000, ge=1, le=10_000)
     source_estimated_entries_per_second: int = Field(default=250, ge=1)
+    channel_normalization_batch_size: int = Field(default=1_000, ge=1, le=10_000)
+    channel_page_size_default: int = Field(default=100, ge=1, le=500)
     allow_private_source_urls: bool = False
 
     model_config = SettingsConfigDict(

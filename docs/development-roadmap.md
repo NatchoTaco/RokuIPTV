@@ -51,25 +51,38 @@ Delivered:
 
 Implemented notes:
 
-- Imports store raw channel records only; no Milestone 3 cleanup, duplicate clustering, normalization, filtering, or EPG matching is executed.
+- Imports store raw channel records first. Milestone 3 normalization and cleanup run as a separate job so raw provider evidence remains preserved.
 - The worker processes queued jobs outside the API process.
 - Remote source URLs are encrypted at rest and redacted in dashboard/API responses.
 - Uploaded files are saved under `STREAMFORGE_SOURCE_UPLOAD_DIR` and imported by the worker.
 
 ## Milestone 3 - Channel Normalization and Cleanup
 
-Status: deferred.
+Status: implemented in repository; full Docker and frontend validation require Docker and Node package installation.
 
-Planned:
+Delivered:
 
 - Normalization engine.
-- Filter-rule model.
+- Normalization job tracking.
+- Standard channel groups.
+- Filter-rule and filter-decision models.
 - Light, Recommended, Aggressive, and Custom cleanup profiles.
 - Explainable filter decisions.
-- Channel manager.
+- Channels page.
 - Cleanup Center.
 - Duplicate candidate detection.
 - Merge and split operations.
+- Protect-from-auto-merge and allowlist/blocklist overrides.
+- Curated channel and source-candidate generation.
+- Cursor-paginated channel API.
+
+Implemented notes:
+
+- Automatic cleanup hides, groups, ranks, and clusters rows but does not permanently delete raw imported provider records.
+- Identical names alone are not enough for duplicate merging; compatible metadata or strong identifiers are required.
+- The worker processes queued normalization jobs after import jobs.
+- Dashboard channel and candidate views show checksums and metadata only, never raw stream URLs.
+- XMLTV, playback, Roku, recording, timeshift, FFmpeg/FFprobe probing, and guide mapping remain deferred.
 
 ## Milestone 4 - XMLTV and Guide
 

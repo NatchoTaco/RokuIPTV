@@ -40,6 +40,647 @@
         ],
         "type": "object"
       },
+      "ChannelGroupListResponse": {
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelGroupResponse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "groups"
+        ],
+        "title": "ChannelGroupListResponse",
+        "type": "object"
+      },
+      "ChannelGroupResponse": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "is_visible": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "normalized_name": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "normalized_name",
+          "sort_order",
+          "is_visible"
+        ],
+        "title": "ChannelGroupResponse",
+        "type": "object"
+      },
+      "ChannelListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelSummaryResponse"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page_size": {
+            "type": "integer"
+          },
+          "total_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "total_count",
+          "page_size"
+        ],
+        "title": "ChannelListResponse",
+        "type": "object"
+      },
+      "ChannelSourceCandidateListResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelSourceCandidateResponse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidates"
+        ],
+        "title": "ChannelSourceCandidateListResponse",
+        "type": "object"
+      },
+      "ChannelSourceCandidateResponse": {
+        "properties": {
+          "attributes": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "claimed_quality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content_type": {
+            "enum": [
+              "live_tv",
+              "movie",
+              "series",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "curated_channel_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "normalized_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "normalized_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "original_name": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "raw_channel_id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "selection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "raw_channel_id",
+          "curated_channel_id",
+          "role",
+          "rank",
+          "selection_reason",
+          "original_name",
+          "normalized_name",
+          "normalized_group",
+          "content_type",
+          "claimed_quality",
+          "url_checksum",
+          "attributes"
+        ],
+        "title": "ChannelSourceCandidateResponse",
+        "type": "object"
+      },
+      "ChannelSummaryResponse": {
+        "properties": {
+          "claimed_quality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content_type": {
+            "enum": [
+              "live_tv",
+              "movie",
+              "series",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "duplicate_cluster_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "explanations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "filtering_reasons": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "inferred_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "inferred_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "inferred_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "line_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "normalized_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "normalized_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "normalized_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "original_logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "original_name": {
+            "type": "string"
+          },
+          "original_tvg_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "original_tvg_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visibility_status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_id",
+          "source_name",
+          "original_name",
+          "normalized_name",
+          "normalized_group",
+          "content_type",
+          "inferred_country",
+          "inferred_language",
+          "inferred_category",
+          "claimed_quality",
+          "visibility_status",
+          "duplicate_cluster_id",
+          "url_checksum",
+          "original_tvg_id",
+          "original_tvg_name",
+          "original_logo_url",
+          "line_number",
+          "normalized_at",
+          "explanations",
+          "filtering_reasons"
+        ],
+        "title": "ChannelSummaryResponse",
+        "type": "object"
+      },
+      "ChannelUpdateRequest": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 260,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "maxLength": 220,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "protected_from_auto_merge": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visibility_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "visible",
+                  "hidden",
+                  "always_visible"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ChannelUpdateRequest",
+        "type": "object"
+      },
+      "CleanupApplyResponse": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "profile": {
+            "enum": [
+              "light",
+              "recommended",
+              "aggressive",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "protected_count": {
+            "type": "integer"
+          },
+          "reasons": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "sample_channel_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_channels": {
+            "type": "integer"
+          },
+          "would_allow": {
+            "type": "integer"
+          },
+          "would_hide": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "profile",
+          "source_id",
+          "total_channels",
+          "would_hide",
+          "would_allow",
+          "protected_count",
+          "sample_channel_ids",
+          "reasons",
+          "applied"
+        ],
+        "title": "CleanupApplyResponse",
+        "type": "object"
+      },
+      "CleanupPreviewResponse": {
+        "properties": {
+          "profile": {
+            "enum": [
+              "light",
+              "recommended",
+              "aggressive",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "protected_count": {
+            "type": "integer"
+          },
+          "reasons": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "sample_channel_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_channels": {
+            "type": "integer"
+          },
+          "would_allow": {
+            "type": "integer"
+          },
+          "would_hide": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "profile",
+          "source_id",
+          "total_channels",
+          "would_hide",
+          "would_allow",
+          "protected_count",
+          "sample_channel_ids",
+          "reasons"
+        ],
+        "title": "CleanupPreviewResponse",
+        "type": "object"
+      },
+      "CleanupProfileRequest": {
+        "properties": {
+          "profile": {
+            "default": "recommended",
+            "enum": [
+              "light",
+              "recommended",
+              "aggressive",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "CleanupProfileRequest",
+        "type": "object"
+      },
+      "CleanupQueueResponse": {
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "count",
+          "description"
+        ],
+        "title": "CleanupQueueResponse",
+        "type": "object"
+      },
+      "CleanupQueuesResponse": {
+        "properties": {
+          "queues": {
+            "items": {
+              "$ref": "#/components/schemas/CleanupQueueResponse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "queues"
+        ],
+        "title": "CleanupQueuesResponse",
+        "type": "object"
+      },
       "CreateUploadSourceRequest": {
         "properties": {
           "confirm_large_import": {
@@ -72,6 +713,84 @@
           "name",
           "file"
         ],
+        "type": "object"
+      },
+      "DuplicateActionResponse": {
+        "properties": {
+          "cluster": {
+            "$ref": "#/components/schemas/DuplicateClusterResponse"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cluster",
+          "message"
+        ],
+        "title": "DuplicateActionResponse",
+        "type": "object"
+      },
+      "DuplicateClusterListResponse": {
+        "properties": {
+          "clusters": {
+            "items": {
+              "$ref": "#/components/schemas/DuplicateClusterResponse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "clusters"
+        ],
+        "title": "DuplicateClusterListResponse",
+        "type": "object"
+      },
+      "DuplicateClusterResponse": {
+        "properties": {
+          "candidate_count": {
+            "type": "integer"
+          },
+          "confidence_score": {
+            "type": "number"
+          },
+          "explanations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "primary_raw_channel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review_status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "confidence_score",
+          "review_status",
+          "candidate_count",
+          "primary_raw_channel_id",
+          "explanations"
+        ],
+        "title": "DuplicateClusterResponse",
         "type": "object"
       },
       "HealthResponse": {
@@ -117,6 +836,148 @@
         "required": [
           "message"
         ],
+        "type": "object"
+      },
+      "NormalizationJobCreateRequest": {
+        "properties": {
+          "process_now": {
+            "default": false,
+            "type": "boolean"
+          },
+          "profile": {
+            "default": "recommended",
+            "enum": [
+              "light",
+              "recommended",
+              "aggressive",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "NormalizationJobCreateRequest",
+        "type": "object"
+      },
+      "NormalizationJobResponse": {
+        "properties": {
+          "canceled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "processed_raw_channels": {
+            "type": "integer"
+          },
+          "profile": {
+            "enum": [
+              "light",
+              "recommended",
+              "aggressive",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "progress_percent": {
+            "type": "integer"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "canceled"
+            ],
+            "type": "string"
+          },
+          "total_raw_channels": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "source_id",
+          "status",
+          "profile",
+          "progress_percent",
+          "message",
+          "total_raw_channels",
+          "processed_raw_channels",
+          "started_at",
+          "completed_at",
+          "canceled_at",
+          "failure_reason",
+          "stats"
+        ],
+        "title": "NormalizationJobResponse",
         "type": "object"
       },
       "PlaylistImportHistoryItem": {
@@ -937,6 +1798,542 @@
         "summary": "Sign out",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/channels": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 500,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "source_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "visibility_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "content_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "duplicate_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelListResponse"
+                }
+              }
+            },
+            "description": "Channel list"
+          }
+        },
+        "summary": "List normalized channels",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/channels/groups": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelGroupListResponse"
+                }
+              }
+            },
+            "description": "Channel group list"
+          }
+        },
+        "summary": "List channel groups",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/channels/normalization-jobs": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NormalizationJobCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NormalizationJobResponse"
+                }
+              }
+            },
+            "description": "Normalization job"
+          }
+        },
+        "summary": "Create channel normalization job",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/channels/normalization-jobs/{job_id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NormalizationJobResponse"
+                }
+              }
+            },
+            "description": "Normalization job"
+          }
+        },
+        "summary": "Get channel normalization job",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/channels/normalization-jobs/{job_id}/cancel": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NormalizationJobResponse"
+                }
+              }
+            },
+            "description": "Normalization job"
+          }
+        },
+        "summary": "Cancel channel normalization job",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/channels/{raw_channel_id}": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "raw_channel_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelSummaryResponse"
+                }
+              }
+            },
+            "description": "Channel summary"
+          }
+        },
+        "summary": "Update channel manual overrides",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/channels/{raw_channel_id}/candidates": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "raw_channel_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelSourceCandidateListResponse"
+                }
+              }
+            },
+            "description": "Channel source candidates"
+          }
+        },
+        "summary": "List channel source candidates",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/api/v1/cleanup/apply": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CleanupProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanupApplyResponse"
+                }
+              }
+            },
+            "description": "Cleanup apply result"
+          }
+        },
+        "summary": "Apply cleanup profile",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/duplicates": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateClusterListResponse"
+                }
+              }
+            },
+            "description": "Duplicate clusters"
+          }
+        },
+        "summary": "List duplicate clusters",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/duplicates/{cluster_id}/merge": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateActionResponse"
+                }
+              }
+            },
+            "description": "Duplicate action"
+          }
+        },
+        "summary": "Merge duplicate cluster",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/duplicates/{cluster_id}/protect": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateActionResponse"
+                }
+              }
+            },
+            "description": "Duplicate action"
+          }
+        },
+        "summary": "Protect duplicate cluster",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/duplicates/{cluster_id}/split": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateActionResponse"
+                }
+              }
+            },
+            "description": "Duplicate action"
+          }
+        },
+        "summary": "Split duplicate cluster",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/preview": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CleanupProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanupPreviewResponse"
+                }
+              }
+            },
+            "description": "Cleanup preview"
+          }
+        },
+        "summary": "Preview cleanup profile",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/queues": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "source_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanupQueuesResponse"
+                }
+              }
+            },
+            "description": "Cleanup queues"
+          }
+        },
+        "summary": "List cleanup queues",
+        "tags": [
+          "cleanup"
         ]
       }
     },
