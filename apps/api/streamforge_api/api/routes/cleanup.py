@@ -7,12 +7,14 @@ from streamforge_api.api.deps import get_current_admin, get_db, get_settings
 from streamforge_api.core.config import Settings
 from streamforge_api.models import User
 from streamforge_api.schemas.channels import (
+    ClearProtectionsResponse,
     CleanupApplyResponse,
     CleanupPreviewResponse,
     CleanupProfileRequest,
     CleanupQueuesResponse,
     DuplicateActionResponse,
     DuplicateClusterListResponse,
+    ProtectionSummaryResponse,
 )
 from streamforge_api.services.channels import ChannelService
 
@@ -55,6 +57,26 @@ def apply_cleanup_profile(
     )
 
 
+@router.get("/protections", response_model=ProtectionSummaryResponse)
+def protection_summary(
+    source_id: str | None = None,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    _current_admin: User = Depends(get_current_admin),
+) -> ProtectionSummaryResponse:
+    return ChannelService(db, settings).protection_summary(source_id=source_id)
+
+
+@router.post("/protections/clear", response_model=ClearProtectionsResponse)
+def clear_manual_protections(
+    source_id: str | None = None,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    _current_admin: User = Depends(get_current_admin),
+) -> ClearProtectionsResponse:
+    return ChannelService(db, settings).clear_manual_protections(source_id=source_id)
+
+
 @router.get("/duplicates", response_model=DuplicateClusterListResponse)
 def duplicate_clusters(
     db: Session = Depends(get_db),
@@ -92,3 +114,13 @@ def protect_duplicate_cluster(
     _current_admin: User = Depends(get_current_admin),
 ) -> DuplicateActionResponse:
     return ChannelService(db, settings).protect_duplicate_cluster(cluster_id)
+
+
+@router.post("/duplicates/{cluster_id}/unprotect", response_model=DuplicateActionResponse)
+def unprotect_duplicate_cluster(
+    cluster_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    _current_admin: User = Depends(get_current_admin),
+) -> DuplicateActionResponse:
+    return ChannelService(db, settings).unprotect_duplicate_cluster(cluster_id)

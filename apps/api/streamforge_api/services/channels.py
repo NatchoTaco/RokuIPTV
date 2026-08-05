@@ -50,6 +50,7 @@ from streamforge_api.schemas.channels import (
     ChannelSourceCandidateResponse,
     ChannelSummaryResponse,
     ChannelUpdateRequest,
+    ClearProtectionsResponse,
     CleanupApplyResponse,
     CleanupPreviewResponse,
     CleanupQueueResponse,
@@ -60,6 +61,7 @@ from streamforge_api.schemas.channels import (
     DuplicateClusterResponse,
     JobStatus,
     NormalizationJobResponse,
+    ProtectionSummaryResponse,
 )
 
 QUALITY_RANK: dict[str, int] = {
@@ -115,7 +117,9 @@ class ChannelService:
             )
         if group:
             filters.append(RawChannel.normalized_group == group)
-        if visibility_status:
+        if visibility_status == "protected":
+            filters.append(RawChannel.protected_from_auto_merge.is_(True))
+        elif visibility_status:
             filters.append(RawChannel.visibility_status == visibility_status)
         if content_type:
             filters.append(RawChannel.content_type == content_type)
@@ -471,6 +475,37 @@ class ChannelService:
             applied=response.status == "succeeded",
         )
 
+    def protection_summary(self, *, source_id: str | None = None) -> ProtectionSummaryResponse:
+        filters = self._raw_channel_filters(source_id=source_id)
+        protected_channel_count = self.db.scalar(
+            select(func.count()).select_from(RawChannel).where(*filters, RawChannel.protected_from_auto_merge.is_(True))
+        ) or 0
+        protected_cluster_count = self._protected_cluster_count(source_id=source_id)
+        return ProtectionSummaryResponse(
+            protected_channel_count=protected_channel_count,
+            protected_cluster_count=protected_cluster_count,
+            total_protection_count=protected_channel_count + protected_cluster_count,
+        )
+
+    def clear_manual_protections(self, *, source_id: str | None = None) -> ClearProtectionsResponse:
+        before = self.protection_summary(source_id=source_id)
+        filters = self._raw_channel_filters(source_id=source_id)
+        self.db.execute(
+            update(RawChannel)
+            .where(*filters, RawChannel.protected_from_auto_merge.is_(True))
+            .values(protected_from_auto_merge=False, updated_at=utcnow())
+        )
+        for cluster in self._protected_clusters(source_id=source_id):
+            cluster.review_status = "pending_review"
+            cluster.updated_at = utcnow()
+        self.db.commit()
+        return ClearProtectionsResponse(
+            protected_channel_count=0,
+            protected_cluster_count=0,
+            total_protection_count=0,
+            message=f"Cleared {before.total_protection_count:,} manual protection override(s).",
+        )
+
     def list_duplicate_clusters(self) -> DuplicateClusterListResponse:
         clusters = self.db.scalars(
             select(DuplicateCluster)
@@ -481,15 +516,32 @@ class ChannelService:
 
     def protect_duplicate_cluster(self, cluster_id: str) -> DuplicateActionResponse:
         cluster = self._get_cluster(cluster_id)
+        now = utcnow()
         cluster.review_status = "protected"
-        channels = self.db.scalars(select(RawChannel).where(RawChannel.duplicate_cluster_id == cluster.id)).all()
-        for channel in channels:
+        cluster.updated_at = now
+        for channel in self._cluster_channels(cluster):
             channel.protected_from_auto_merge = True
-            channel.duplicate_cluster_id = None
+            channel.updated_at = now
         self.db.commit()
         return DuplicateActionResponse(
             cluster=self._cluster_response(cluster),
             message="Cluster protected; raw channels will not be auto-merged.",
+        )
+
+    def unprotect_duplicate_cluster(self, cluster_id: str) -> DuplicateActionResponse:
+        cluster = self._get_cluster(cluster_id)
+        now = utcnow()
+        channels = self._cluster_channels(cluster)
+        if cluster.review_status == "protected":
+            cluster.review_status = "pending_review"
+        cluster.updated_at = now
+        for channel in channels:
+            channel.protected_from_auto_merge = False
+            channel.updated_at = now
+        self.db.commit()
+        return DuplicateActionResponse(
+            cluster=self._cluster_response(cluster),
+            message="Cluster protection cleared; raw channels and visibility decisions were preserved.",
         )
 
     def merge_duplicate_cluster(self, cluster_id: str) -> DuplicateActionResponse:
@@ -749,7 +801,7 @@ class ChannelService:
                     manual_visibility_status=channel.manual_visibility_status,
                 )
                 total_channels += 1
-                if channel.manual_visibility_status == "always_visible":
+                if channel.protected_from_auto_merge:
                     protected_count += 1
                 if filtering.visibility_status == "hidden":
                     would_hide += 1
@@ -843,6 +895,7 @@ class ChannelService:
             inferred_category=channel.inferred_category,
             claimed_quality=channel.claimed_quality,
             visibility_status=channel.visibility_status,
+            protected_from_auto_merge=channel.protected_from_auto_merge,
             duplicate_cluster_id=channel.duplicate_cluster_id,
             url_checksum=channel.url_checksum,
             original_tvg_id=channel.original_tvg_id,
@@ -920,6 +973,53 @@ class ChannelService:
         if cluster is None:
             raise DuplicateClusterNotFoundError()
         return cluster
+
+    def _cluster_channels(self, cluster: DuplicateCluster) -> list[RawChannel]:
+        channels = self.db.scalars(select(RawChannel).where(RawChannel.duplicate_cluster_id == cluster.id)).all()
+        if channels or cluster.review_status != "protected":
+            return list(channels)
+
+        normalized_key = cluster.stats_json.get("normalized_key")
+        if not isinstance(normalized_key, str) or not normalized_key:
+            return []
+
+        fallback_filters: list[ColumnElement[bool]] = [
+            RawChannel.normalized_key == normalized_key,
+            RawChannel.protected_from_auto_merge.is_(True),
+        ]
+        if cluster.primary_raw_channel_id:
+            primary = self.db.get(RawChannel, cluster.primary_raw_channel_id)
+            if primary is not None:
+                fallback_filters.append(RawChannel.source_id == primary.source_id)
+        return list(self.db.scalars(select(RawChannel).where(*fallback_filters)).all())
+
+    def _protected_clusters(self, *, source_id: str | None) -> list[DuplicateCluster]:
+        if source_id is None:
+            return list(
+                self.db.scalars(
+                    select(DuplicateCluster).where(DuplicateCluster.review_status == "protected")
+                ).all()
+            )
+        return list(
+            self.db.scalars(
+                select(DuplicateCluster)
+                .join(RawChannel, RawChannel.duplicate_cluster_id == DuplicateCluster.id)
+                .where(RawChannel.source_id == source_id, DuplicateCluster.review_status == "protected")
+                .distinct()
+            ).all()
+        )
+
+    def _protected_cluster_count(self, *, source_id: str | None) -> int:
+        if source_id is None:
+            return self.db.scalar(
+                select(func.count()).select_from(DuplicateCluster).where(DuplicateCluster.review_status == "protected")
+            ) or 0
+        return self.db.scalar(
+            select(func.count(func.distinct(DuplicateCluster.id)))
+            .select_from(DuplicateCluster)
+            .join(RawChannel, RawChannel.duplicate_cluster_id == DuplicateCluster.id)
+            .where(RawChannel.source_id == source_id, DuplicateCluster.review_status == "protected")
+        ) or 0
 
     @staticmethod
     def _primary_channel(channels: list[RawChannel]) -> RawChannel:

@@ -24,6 +24,7 @@ class ChannelSummaryResponse(BaseModel):
     inferred_category: str | None
     claimed_quality: str | None
     visibility_status: str
+    protected_from_auto_merge: bool
     duplicate_cluster_id: str | None
     url_checksum: str | None
     original_tvg_id: str | None
@@ -150,4 +151,14 @@ class DuplicateClusterListResponse(BaseModel):
 
 class DuplicateActionResponse(BaseModel):
     cluster: DuplicateClusterResponse
+    message: str
+
+
+class ProtectionSummaryResponse(BaseModel):
+    protected_channel_count: int
+    protected_cluster_count: int
+    total_protection_count: int
+
+
+class ClearProtectionsResponse(ProtectionSummaryResponse):
     message: str

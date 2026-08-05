@@ -74,10 +74,13 @@ Channel endpoints require an authenticated administrator. They expose original a
 - `GET /api/v1/cleanup/queues`
 - `POST /api/v1/cleanup/preview`
 - `POST /api/v1/cleanup/apply`
+- `GET /api/v1/cleanup/protections`
+- `POST /api/v1/cleanup/protections/clear`
 - `GET /api/v1/cleanup/duplicates`
 - `POST /api/v1/cleanup/duplicates/{cluster_id}/merge`
 - `POST /api/v1/cleanup/duplicates/{cluster_id}/split`
 - `POST /api/v1/cleanup/duplicates/{cluster_id}/protect`
+- `POST /api/v1/cleanup/duplicates/{cluster_id}/unprotect`
 
 Cleanup endpoints require an authenticated administrator. Preview reports the effect of Light, Recommended, Aggressive, or Custom profiles before applying. Apply reruns normalization with the selected profile and rebuilds generated curated lineup rows without deleting raw provider records.
 
@@ -159,6 +162,8 @@ Import history responses include:
 - `content_type`
 - `duplicate_status`
 
+The special `visibility_status=protected` filter returns channels with a manual protection override instead of matching a visibility state.
+
 `POST /api/v1/channels/normalization-jobs` accepts:
 
 - `source_id`
@@ -177,6 +182,8 @@ Normalization job responses include status, progress, processed/total counts, st
 Manual allowlist visibility overrides automatic cleanup. Manual hidden decisions behave as a blocklist. Source candidate responses include ranking, role, selection reason, metadata, and URL checksum only.
 
 Cleanup profile payloads accept `profile` and optional `source_id`. Responses include total channels, channels that would be hidden or allowed, protected counts, sample channel IDs, and reason counts.
+
+Protection summary and clear endpoints manage only manual protection overrides. Clearing protection does not alter channel records, duplicate membership, or explicit Allow/Hide visibility decisions.
 
 ## Future Endpoint Areas
 

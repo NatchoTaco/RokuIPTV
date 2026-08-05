@@ -386,6 +386,9 @@
               }
             ]
           },
+          "protected_from_auto_merge": {
+            "type": "boolean"
+          },
           "source_id": {
             "type": "string"
           },
@@ -426,6 +429,7 @@
           "inferred_category",
           "claimed_quality",
           "visibility_status",
+          "protected_from_auto_merge",
           "duplicate_cluster_id",
           "url_checksum",
           "original_tvg_id",
@@ -679,6 +683,30 @@
           "queues"
         ],
         "title": "CleanupQueuesResponse",
+        "type": "object"
+      },
+      "ClearProtectionsResponse": {
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "protected_channel_count": {
+            "type": "integer"
+          },
+          "protected_cluster_count": {
+            "type": "integer"
+          },
+          "total_protection_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "protected_channel_count",
+          "protected_cluster_count",
+          "total_protection_count",
+          "message"
+        ],
+        "title": "ClearProtectionsResponse",
         "type": "object"
       },
       "CreateUploadSourceRequest": {
@@ -1168,6 +1196,26 @@
           "completed_at",
           "failure_reason"
         ],
+        "type": "object"
+      },
+      "ProtectionSummaryResponse": {
+        "properties": {
+          "protected_channel_count": {
+            "type": "integer"
+          },
+          "protected_cluster_count": {
+            "type": "integer"
+          },
+          "total_protection_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "protected_channel_count",
+          "protected_cluster_count",
+          "total_protection_count"
+        ],
+        "title": "ProtectionSummaryResponse",
         "type": "object"
       },
       "ServiceCheck": {
@@ -2270,6 +2318,36 @@
         ]
       }
     },
+    "/api/v1/cleanup/duplicates/{cluster_id}/unprotect": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateActionResponse"
+                }
+              }
+            },
+            "description": "Duplicate action"
+          }
+        },
+        "summary": "Unprotect duplicate cluster",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
     "/api/v1/cleanup/preview": {
       "post": {
         "requestBody": {
@@ -2295,6 +2373,80 @@
           }
         },
         "summary": "Preview cleanup profile",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/protections": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "source_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtectionSummaryResponse"
+                }
+              }
+            },
+            "description": "Protection summary"
+          }
+        },
+        "summary": "Protection summary",
+        "tags": [
+          "cleanup"
+        ]
+      }
+    },
+    "/api/v1/cleanup/protections/clear": {
+      "post": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "source_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearProtectionsResponse"
+                }
+              }
+            },
+            "description": "Clear protections"
+          }
+        },
+        "summary": "Clear manual protections",
         "tags": [
           "cleanup"
         ]

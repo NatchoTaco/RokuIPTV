@@ -157,6 +157,7 @@ export const channelSummarySchema = z.object({
   inferred_category: z.string().nullable(),
   claimed_quality: z.string().nullable(),
   visibility_status: z.string(),
+  protected_from_auto_merge: z.boolean(),
   duplicate_cluster_id: z.string().nullable(),
   url_checksum: z.string().nullable(),
   original_tvg_id: z.string().nullable(),
@@ -268,6 +269,16 @@ export const duplicateActionSchema = z.object({
   message: z.string(),
 });
 
+export const protectionSummarySchema = z.object({
+  protected_channel_count: z.number(),
+  protected_cluster_count: z.number(),
+  total_protection_count: z.number(),
+});
+
+export const clearProtectionsSchema = protectionSummarySchema.extend({
+  message: z.string(),
+});
+
 export type SetupState = z.infer<typeof setupStateSchema>;
 export type User = z.infer<typeof userSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
@@ -293,6 +304,8 @@ export type CleanupQueue = z.infer<typeof cleanupQueueSchema>;
 export type CleanupPreview = z.infer<typeof cleanupPreviewSchema>;
 export type CleanupApply = z.infer<typeof cleanupApplySchema>;
 export type DuplicateCluster = z.infer<typeof duplicateClusterSchema>;
+export type ProtectionSummary = z.infer<typeof protectionSummarySchema>;
+export type ClearProtections = z.infer<typeof clearProtectionsSchema>;
 
 export class ApiError extends Error {
   constructor(
@@ -555,8 +568,24 @@ export function listDuplicateClusters(): Promise<{ clusters: DuplicateCluster[] 
   return fetchJson("/api/v1/cleanup/duplicates", duplicateClusterListSchema);
 }
 
+export function getProtectionSummary(): Promise<ProtectionSummary> {
+  return fetchJson("/api/v1/cleanup/protections", protectionSummarySchema);
+}
+
+export function clearManualProtections(): Promise<ClearProtections> {
+  return fetchJson("/api/v1/cleanup/protections/clear", clearProtectionsSchema, {
+    method: "POST",
+  });
+}
+
 export function protectDuplicateCluster(clusterId: string): Promise<{ cluster: DuplicateCluster; message: string }> {
   return fetchJson(`/api/v1/cleanup/duplicates/${clusterId}/protect`, duplicateActionSchema, {
+    method: "POST",
+  });
+}
+
+export function unprotectDuplicateCluster(clusterId: string): Promise<{ cluster: DuplicateCluster; message: string }> {
+  return fetchJson(`/api/v1/cleanup/duplicates/${clusterId}/unprotect`, duplicateActionSchema, {
     method: "POST",
   });
 }

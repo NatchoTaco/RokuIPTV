@@ -72,7 +72,7 @@ Delivered:
 - Cleanup Center.
 - Duplicate candidate detection.
 - Merge and split operations.
-- Protect-from-auto-merge and allowlist/blocklist overrides.
+- Reversible protect-from-auto-merge and allowlist/blocklist overrides.
 - Curated channel and source-candidate generation.
 - Cursor-paginated channel API.
 
