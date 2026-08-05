@@ -9,6 +9,8 @@ from datetime import UTC, datetime
 
 from fastapi import Request, Response
 
+from streamforge_api.core.redaction import redact_text
+
 REQUEST_ID_HEADER = "X-Request-ID"
 
 
@@ -18,14 +20,14 @@ class JsonFormatter(logging.Formatter):
             "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": redact_text(record.getMessage()),
         }
         for key in ("request_id", "method", "path", "status_code", "duration_ms"):
             value = getattr(record, key, None)
             if value is not None:
-                payload[key] = value
+                payload[key] = redact_text(value) if isinstance(value, str) else value
         if record.exc_info:
-            payload["exception"] = self.formatException(record.exc_info)
+            payload["exception"] = redact_text(self.formatException(record.exc_info))
         return json.dumps(payload, separators=(",", ":"))
 
 

@@ -40,3 +40,51 @@ def test_safe_url_validator_rejects_unsupported_and_private_sources() -> None:
 
     assert not private_result.is_safe
     assert "private" in private_result.errors[0] or "Localhost" in private_result.errors[0]
+<<<<<<< HEAD
+=======
+
+
+def test_m3u_parser_handles_provider_style_extinf_groups_and_commas() -> None:
+    playlist = """#EXTM3U
+#EXTINF:-1 tvg-name="News, Local" tvg-id="news.local" group-title="US, News" tvg-logo="https://example.com/logo,1.png",News, Local
+https://example.com/live/user/pass/1001.m3u8
+#EXTINF:-1 group-title = 'Movies, Featured' tvg-id='movie.one' tvg-name='Movie One',Movie One
+https://example.com/movie/user/pass/2001.mp4
+#EXTINF:-1 tvg-id=series.one group_title=Series tvg-name="Show S01E02",Show S01E02
+https://example.com/series/user/pass/3001.mp4
+#EXTINF:-1 GROUP-TITLE="International – Café" tvg-id="unknown.one",Mystery Stream
+https://example.com/content/4001.ts
+"""
+
+    result = M3uParser().parse_text(playlist, include_content_types={"live_tv"})
+
+    assert result.total_entry_count == 4
+    assert result.group_count == 4
+    assert result.content_counts.live_tv == 1
+    assert result.content_counts.movie == 1
+    assert result.content_counts.series == 1
+    assert result.content_counts.unknown == 1
+    assert result.excluded_count == 3
+    assert result.channels[0].original_group == "US, News"
+    assert result.samples[0].name == "News, Local"
+
+
+def test_m3u_parser_summarizes_large_synthetic_playlist_without_real_provider_data() -> None:
+    lines = ["#EXTM3U"]
+    for index in range(1, 1001):
+        lines.append(f'#EXTINF:-1 tvg-id="live.{index}" group-title="Group {index % 10}",Live {index}')
+        lines.append(f"https://example.com/live/demo/{index}.m3u8")
+    playlist = "\n".join(lines)
+
+    result = M3uParser().parse_text(
+        playlist,
+        include_content_types={"live_tv"},
+        keep_channels=False,
+    )
+
+    assert result.total_entry_count == 1000
+    assert result.selected_entry_count == 1000
+    assert len(result.channels) == 0
+    assert result.group_count == 10
+    assert result.failures == []
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)

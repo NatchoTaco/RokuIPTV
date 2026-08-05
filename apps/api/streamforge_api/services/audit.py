@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from streamforge_api.core.redaction import redact_payload
 from streamforge_api.models import AuditEvent
 
 
@@ -22,6 +23,6 @@ class AuditService:
                 event_type=event_type,
                 ip_address=ip_address,
                 user_agent=user_agent,
-                details_json=details or {},
+                details_json=redact_payload(details or {}),
             )
         )

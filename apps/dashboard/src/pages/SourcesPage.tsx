@@ -25,11 +25,19 @@ import {
   updateSource,
   validateM3uUpload,
   validateM3uUrl,
+<<<<<<< HEAD
+=======
+  type ContentType,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
   type PlaylistImportHistoryItem,
   type SourceSummary,
   type SourceValidation,
   type User,
 } from "../lib/api";
+<<<<<<< HEAD
+=======
+import { redactUrlForDisplay } from "../lib/redaction";
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 import {
   formatDateTime,
   formatDuration,
@@ -125,6 +133,11 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [refreshInterval, setRefreshInterval] = useState("1440");
+<<<<<<< HEAD
+=======
+  const [enabledContentTypes, setEnabledContentTypes] = useState<ContentType[]>(["live_tv"]);
+  const [confirmLargeImport, setConfirmLargeImport] = useState(false);
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
   const [validation, setValidation] = useState<SourceValidation | null>(null);
 
   const parsedRefreshInterval = useMemo(() => {
@@ -138,12 +151,20 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
   const validateMutation = useMutation({
     mutationFn: () => {
       if (method === "m3u_url") {
+<<<<<<< HEAD
         return validateM3uUrl(url);
+=======
+        return validateM3uUrl(url, enabledContentTypes);
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
       }
       if (!file) {
         throw new Error("Choose an M3U file before validating.");
       }
+<<<<<<< HEAD
       return validateM3uUpload(file);
+=======
+      return validateM3uUpload(file, enabledContentTypes);
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
     },
     onSuccess: (result) => setValidation(result),
   });
@@ -160,6 +181,11 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
           name,
           url,
           refresh_interval_minutes: parsedRefreshInterval,
+<<<<<<< HEAD
+=======
+          enabled_content_types: enabledContentTypes,
+          confirm_large_import: confirmLargeImport,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         });
       }
       if (!file) {
@@ -169,6 +195,11 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
         name,
         file,
         refresh_interval_minutes: parsedRefreshInterval,
+<<<<<<< HEAD
+=======
+        enabled_content_types: enabledContentTypes,
+        confirm_large_import: confirmLargeImport,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
       });
     },
     onSuccess: async () => {
@@ -269,6 +300,17 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
             onChange={(event) => setRefreshInterval(event.target.value)}
             hint="Leave blank to disable scheduled refresh."
           />
+<<<<<<< HEAD
+=======
+          <ContentTypeOptions
+            selected={enabledContentTypes}
+            onChange={(nextTypes) => {
+              setEnabledContentTypes(nextTypes);
+              setValidation(null);
+              setConfirmLargeImport(false);
+            }}
+          />
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
           <div className="flex gap-3">
             <Button type="button" tone="secondary" onClick={() => setStep(1)}>
               Back
@@ -285,9 +327,32 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
             <p className="text-sm font-semibold">{name}</p>
             <p className="mt-1 text-sm text-zinc-500">
+<<<<<<< HEAD
               {method === "m3u_url" ? url : file?.name ?? "No file selected"}
             </p>
           </div>
+=======
+              {method === "m3u_url" ? redactUrlForDisplay(url) : file?.name ?? "No file selected"}
+            </p>
+            <p className="mt-1 text-xs text-zinc-600">
+              Importing: {enabledContentTypes.map(contentTypeLabel).join(", ")}
+            </p>
+          </div>
+          {validation?.requires_confirmation ? (
+            <label className="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+              <input
+                className="mt-1"
+                type="checkbox"
+                checked={confirmLargeImport}
+                onChange={(event) => setConfirmLargeImport(event.target.checked)}
+              />
+              <span>
+                I understand this playlist has {validation.total_entry_count.toLocaleString()} entries and
+                confirm importing {validation.selected_entry_count.toLocaleString()} selected entries.
+              </span>
+            </label>
+          ) : null}
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
           <div className="flex flex-wrap gap-3">
             <Button
               tone="secondary"
@@ -300,7 +365,16 @@ function AddSourceWizard({ onClose }: { onClose: () => void }) {
             <Button
               icon={<Upload aria-hidden className="h-4 w-4" />}
               onClick={() => createMutation.mutate()}
+<<<<<<< HEAD
               disabled={!validation?.playlist_reachable || createMutation.isPending}
+=======
+              disabled={
+                !validation?.playlist_reachable ||
+                validation.selected_entry_count === 0 ||
+                (validation.requires_confirmation && !confirmLargeImport) ||
+                createMutation.isPending
+              }
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             >
               Create and import
             </Button>
@@ -340,7 +414,11 @@ function ValidationResult({
           label="Playlist reachable"
           value={validation.playlist_reachable ? "Yes" : "No"}
         />
+<<<<<<< HEAD
         <ValidationStat ok label="Channel count" value={String(validation.channel_count)} />
+=======
+        <ValidationStat ok label="Selected entries" value={validation.selected_entry_count.toLocaleString()} />
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         <ValidationStat ok label="Group count" value={String(validation.group_count)} />
         <ValidationStat
           ok
@@ -348,6 +426,22 @@ function ValidationResult({
           value={`${validation.estimated_import_time_seconds} sec`}
         />
       </div>
+<<<<<<< HEAD
+=======
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <ValidationStat ok label="Total entries" value={validation.total_entry_count.toLocaleString()} />
+        <ValidationStat ok label="Excluded entries" value={validation.excluded_entry_count.toLocaleString()} />
+        <ValidationStat
+          ok
+          label="Database impact"
+          value={`${validation.estimated_database_rows.toLocaleString()} rows / ${formatBytes(
+            validation.estimated_database_bytes,
+          )}`}
+        />
+      </div>
+      <ContentCounts counts={validation.content_counts} />
+      {validation.metadata_samples.length ? <MetadataSamples samples={validation.metadata_samples} /> : null}
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
       {validation.errors.length ? (
         <MessageList tone="error" messages={validation.errors} />
       ) : null}
@@ -374,6 +468,122 @@ function ValidationStat({ ok, label, value }: { ok: boolean; label: string; valu
   );
 }
 
+<<<<<<< HEAD
+=======
+function ContentTypeOptions({
+  selected,
+  onChange,
+}: {
+  selected: ContentType[];
+  onChange: (contentTypes: ContentType[]) => void;
+}) {
+  function toggle(contentType: ContentType) {
+    const next = selected.includes(contentType)
+      ? selected.filter((item) => item !== contentType)
+      : [...selected, contentType];
+    onChange(next.length ? next : ["live_tv"]);
+  }
+
+  return (
+    <fieldset className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+      <legend className="text-sm font-semibold text-zinc-200">Import content types</legend>
+      <div className="grid gap-3 md:grid-cols-4">
+        <ContentTypeCheckbox
+          checked={selected.includes("live_tv")}
+          label="Live TV"
+          detail="Default IPTV setup"
+          onChange={() => toggle("live_tv")}
+        />
+        <ContentTypeCheckbox
+          checked={selected.includes("unknown")}
+          label="Unknown"
+          detail="Store only if you choose it"
+          onChange={() => toggle("unknown")}
+        />
+        <ContentTypeCheckbox checked={false} label="Movies" detail="Deferred; excluded" disabled />
+        <ContentTypeCheckbox checked={false} label="Series" detail="Deferred; excluded" disabled />
+      </div>
+    </fieldset>
+  );
+}
+
+function ContentTypeCheckbox({
+  checked,
+  label,
+  detail,
+  disabled = false,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  detail: string;
+  disabled?: boolean;
+  onChange?: () => void;
+}) {
+  return (
+    <label className="flex min-h-20 gap-3 rounded-md border border-zinc-800 bg-zinc-900 p-3 text-sm">
+      <input
+        className="mt-1"
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={onChange}
+      />
+      <span>
+        <span className="block font-semibold text-zinc-100">{label}</span>
+        <span className="mt-1 block text-xs text-zinc-500">{detail}</span>
+      </span>
+    </label>
+  );
+}
+
+function ContentCounts({ counts }: { counts: Record<string, number> }) {
+  return (
+    <div className="mt-4 rounded-md border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-300">
+      <p className="font-semibold">Detected content</p>
+      <p className="mt-2 text-zinc-400">
+        Live TV: {(counts.live_tv ?? 0).toLocaleString()} · Movies:{" "}
+        {(counts.movie ?? 0).toLocaleString()} · Series: {(counts.series ?? 0).toLocaleString()} · Unknown:{" "}
+        {(counts.unknown ?? 0).toLocaleString()}
+      </p>
+    </div>
+  );
+}
+
+function MetadataSamples({ samples }: { samples: Array<Record<string, unknown>> }) {
+  return (
+    <div className="mt-4 rounded-md border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-300">
+      <p className="font-semibold">Metadata sample</p>
+      <ul className="mt-2 space-y-1 text-xs text-zinc-500">
+        {samples.slice(0, 5).map((sample) => (
+          <li key={`${sample.line_number}-${sample.name}`}>
+            Line {String(sample.line_number)} · {String(sample.name)} · {String(sample.group ?? "No group")} ·{" "}
+            {contentTypeLabel(sample.content_type as ContentType)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function contentTypeLabel(contentType: ContentType): string {
+  const labels: Record<ContentType, string> = {
+    live_tv: "Live TV",
+    movie: "Movies",
+    series: "Series",
+    unknown: "Unknown",
+  };
+  return labels[contentType];
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)} KB`;
+  }
+  return `${Math.round(bytes / (1024 * 1024))} MB`;
+}
+
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 function SourcesTable({ sources, isLoading }: { sources: SourceSummary[]; isLoading: boolean }) {
   const queryClient = useQueryClient();
   const refreshMutation = useMutation({
@@ -429,6 +639,12 @@ function SourcesTable({ sources, isLoading }: { sources: SourceSummary[]; isLoad
             <div>
               <h2 className="font-semibold">{source.name}</h2>
               <p className="mt-1 text-sm text-zinc-500">{sourceTypeLabel(source.source_type)}</p>
+<<<<<<< HEAD
+=======
+              <p className="mt-1 text-xs text-zinc-500">
+                Importing {source.enabled_content_types.map(contentTypeLabel).join(", ")}
+              </p>
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
               <p className="mt-1 break-words text-xs text-zinc-600">{source.display_location}</p>
               {source.active_job ? <ProgressBar source={source} /> : null}
             </div>

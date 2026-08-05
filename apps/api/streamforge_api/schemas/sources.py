@@ -3,23 +3,52 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
+<<<<<<< HEAD
 from pydantic import BaseModel, Field, HttpUrl
 
 SourceType = Literal["m3u_url", "m3u_upload", "demo_playlist"]
 SourceState = Literal["healthy", "importing", "warning", "offline", "failed", "disabled", "pending"]
+=======
+from pydantic import BaseModel, Field
+
+SourceType = Literal["m3u_url", "m3u_upload", "demo_playlist"]
+SourceState = Literal["healthy", "importing", "warning", "offline", "failed", "disabled", "pending"]
+ContentType = Literal["live_tv", "movie", "series", "unknown"]
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 ImportJobState = Literal["queued", "running", "succeeded", "failed"]
 PlaylistImportState = Literal["queued", "running", "completed", "warning", "failed"]
 
 
 class SourceValidateUrlRequest(BaseModel):
+<<<<<<< HEAD
     url: HttpUrl
+=======
+    url: str = Field(min_length=1, max_length=4096)
+    enabled_content_types: list[ContentType] = Field(default_factory=lambda: ["live_tv"])
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 
 class SourceValidationResponse(BaseModel):
     playlist_reachable: bool
     channel_count: int
+<<<<<<< HEAD
     group_count: int
     estimated_import_time_seconds: int
+=======
+    total_entry_count: int = 0
+    selected_entry_count: int = 0
+    excluded_entry_count: int = 0
+    group_count: int
+    content_counts: dict[str, int] = Field(default_factory=dict)
+    selected_content_types: list[ContentType] = Field(default_factory=lambda: ["live_tv"])
+    deferred_content_types: list[ContentType] = Field(default_factory=list)
+    estimated_import_time_seconds: int
+    estimated_database_rows: int = 0
+    estimated_database_bytes: int = 0
+    requires_confirmation: bool = False
+    confirmation_threshold_entries: int | None = None
+    metadata_samples: list[dict[str, object]] = Field(default_factory=list)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
     warnings: list[str]
     errors: list[str]
     checksum: str | None = None
@@ -28,13 +57,25 @@ class SourceValidationResponse(BaseModel):
 
 class SourceCreateUrlRequest(BaseModel):
     name: str = Field(min_length=1, max_length=180)
+<<<<<<< HEAD
     url: HttpUrl
     refresh_interval_minutes: int | None = Field(default=1440, ge=15, le=43200)
+=======
+    url: str = Field(min_length=1, max_length=4096)
+    refresh_interval_minutes: int | None = Field(default=1440, ge=15, le=43200)
+    enabled_content_types: list[ContentType] = Field(default_factory=lambda: ["live_tv"])
+    confirm_large_import: bool = False
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 
 class SourceCreateDemoRequest(BaseModel):
     name: str = Field(default="Synthetic Demonstration Playlist", min_length=1, max_length=180)
     refresh_interval_minutes: int | None = Field(default=None, ge=15, le=43200)
+<<<<<<< HEAD
+=======
+    enabled_content_types: list[ContentType] = Field(default_factory=lambda: ["live_tv"])
+    confirm_large_import: bool = False
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 
 class SourceUpdateRequest(BaseModel):
@@ -72,6 +113,10 @@ class SourceSummaryResponse(BaseModel):
     status_message: str
     display_location: str
     is_enabled: bool
+<<<<<<< HEAD
+=======
+    enabled_content_types: list[ContentType]
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
     refresh_interval_minutes: int | None
     last_updated_at: datetime
     last_refresh_at: datetime | None

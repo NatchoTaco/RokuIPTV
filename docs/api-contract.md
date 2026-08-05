@@ -62,17 +62,41 @@ Playlist endpoints require an authenticated administrator.
 `POST /api/v1/sources/validate-url` accepts:
 
 - `url`: HTTP or HTTPS playlist URL.
+<<<<<<< HEAD
+=======
+- `enabled_content_types`: selected import categories; defaults to `["live_tv"]`.
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 `POST /api/v1/sources/validate-upload` accepts multipart form data:
 
 - `file`: uploaded M3U file.
+<<<<<<< HEAD
+=======
+- `enabled_content_types`: comma-separated selected import categories; defaults to `live_tv`.
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 Validation responses include:
 
 - `playlist_reachable`
 - `channel_count`
+<<<<<<< HEAD
 - `group_count`
 - `estimated_import_time_seconds`
+=======
+- `total_entry_count`
+- `selected_entry_count`
+- `excluded_entry_count`
+- `group_count`
+- `content_counts`
+- `selected_content_types`
+- `deferred_content_types`
+- `estimated_import_time_seconds`
+- `estimated_database_rows`
+- `estimated_database_bytes`
+- `requires_confirmation`
+- `confirmation_threshold_entries`
+- `metadata_samples`
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 - `warnings`
 - `errors`
 - `checksum`
@@ -83,15 +107,32 @@ Validation responses include:
 - `name`
 - `url`
 - `refresh_interval_minutes`
+<<<<<<< HEAD
+=======
+- `enabled_content_types`
+- `confirm_large_import`
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 `POST /api/v1/sources/m3u-upload` accepts multipart form data:
 
 - `name`
 - `refresh_interval_minutes`
+<<<<<<< HEAD
+=======
+- `enabled_content_types`
+- `confirm_large_import`
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 - `file`
 
 Creation responses include the created source summary plus the queued import job.
 
+<<<<<<< HEAD
+=======
+Milestone 2 import options are non-destructive. Live TV is enabled by default. Unknown can be explicitly enabled. Movies and Series are counted and labeled as deferred because safe VOD storage belongs to a later milestone.
+
+Source URLs are never returned in raw form after submission. Normal API responses and validation-error payloads redact user info and sensitive query parameters before they reach the dashboard.
+
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 Import history responses include:
 
 - start and completion times

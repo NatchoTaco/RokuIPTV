@@ -1,10 +1,14 @@
+from streamforge_api.core.redaction import redact_text
+
+
 class StreamForgeError(Exception):
     status_code = 400
     public_message = "The request could not be completed."
 
     def __init__(self, public_message: str | None = None) -> None:
-        super().__init__(public_message or self.public_message)
-        self.public_message = public_message or self.public_message
+        redacted_message = redact_text(public_message or self.public_message)
+        super().__init__(redacted_message)
+        self.public_message = redacted_message
 
 
 class AuthenticationFailedError(StreamForgeError):

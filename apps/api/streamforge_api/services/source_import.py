@@ -9,9 +9,15 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import cast
 
+<<<<<<< HEAD
 from fastapi import UploadFile
 import httpx
 from sqlalchemy import func, select
+=======
+import httpx
+from fastapi import UploadFile
+from sqlalchemy import delete, func, select
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 from sqlalchemy.orm import Session
 
 from streamforge_api.core.config import Settings
@@ -21,8 +27,20 @@ from streamforge_api.core.errors import (
     SourceNotFoundError,
     SourceValidationError,
 )
+<<<<<<< HEAD
 from streamforge_api.core.secrets import SecretBox
 from streamforge_api.domain.m3u import M3uChannel, M3uParseResult, M3uParser
+=======
+from streamforge_api.core.redaction import redact_text
+from streamforge_api.core.secrets import SecretBox
+from streamforge_api.domain.m3u import (
+    CONTENT_TYPE_LABELS,
+    ContentType,
+    M3uChannel,
+    M3uParseResult,
+    M3uParser,
+)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 from streamforge_api.domain.source_status import (
     ImportJobState,
     PlaylistImportState,
@@ -52,8 +70,14 @@ from streamforge_api.schemas.sources import (
 
 @dataclass(frozen=True)
 class LoadedPlaylist:
+<<<<<<< HEAD
     content: bytes
     source_version: str
+=======
+    path: Path
+    source_version: str
+    temporary: bool = False
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 
 class SourceImportService:
@@ -92,7 +116,16 @@ class SourceImportService:
             raise ImportJobNotFoundError()
         return self._job_response(job)
 
+<<<<<<< HEAD
     def validate_url_source(self, raw_url: str) -> SourceValidationResponse:
+=======
+    def validate_url_source(
+        self,
+        raw_url: str,
+        *,
+        enabled_content_types: list[ContentType] | None = None,
+    ) -> SourceValidationResponse:
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         url_result = self.url_validator.validate_source_url(raw_url)
         if not url_result.is_safe or url_result.normalized_url is None:
             return SourceValidationResponse(
@@ -103,6 +136,12 @@ class SourceImportService:
                 warnings=[],
                 errors=url_result.errors,
             )
+<<<<<<< HEAD
+=======
+        warnings = self._source_url_warnings(url_result.normalized_url)
+        requested_content_types = self._requested_content_types(enabled_content_types)
+        selected_content_types = self._enabled_content_types(enabled_content_types)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         try:
             playlist = self._fetch_remote_playlist(url_result.normalized_url)
         except SourceValidationError as exc:
@@ -111,12 +150,39 @@ class SourceImportService:
                 channel_count=0,
                 group_count=0,
                 estimated_import_time_seconds=0,
+<<<<<<< HEAD
                 warnings=[],
                 errors=[exc.public_message],
             )
         return self._validation_response(self.parser.parse_bytes(playlist.content), reachable=True)
 
     def validate_uploaded_playlist(self, content: bytes) -> SourceValidationResponse:
+=======
+                warnings=warnings,
+                errors=[exc.public_message],
+            )
+        try:
+            parse_result = self.parser.parse_path(
+                playlist.path,
+                include_content_types=selected_content_types,
+            )
+            return self._validation_response(
+                parse_result,
+                reachable=True,
+                extra_warnings=warnings,
+                selected_content_types=selected_content_types,
+                requested_content_types=requested_content_types,
+            )
+        finally:
+            self._cleanup_loaded_playlist(playlist)
+
+    def validate_uploaded_playlist(
+        self,
+        content: bytes,
+        *,
+        enabled_content_types: list[ContentType] | None = None,
+    ) -> SourceValidationResponse:
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         if len(content) > self.settings.source_max_playlist_bytes:
             return SourceValidationResponse(
                 playlist_reachable=False,
@@ -126,7 +192,46 @@ class SourceImportService:
                 warnings=[],
                 errors=["Uploaded playlist exceeds the configured maximum size."],
             )
+<<<<<<< HEAD
         return self._validation_response(self.parser.parse_bytes(content), reachable=True)
+=======
+        return self._validation_response(
+            self.parser.parse_bytes(
+                content,
+                include_content_types=self._enabled_content_types(enabled_content_types),
+            ),
+            reachable=True,
+            extra_warnings=[],
+            selected_content_types=self._enabled_content_types(enabled_content_types),
+            requested_content_types=self._requested_content_types(enabled_content_types),
+        )
+
+    def validate_uploaded_playlist_path(
+        self,
+        path: Path,
+        *,
+        enabled_content_types: list[ContentType] | None = None,
+    ) -> SourceValidationResponse:
+        if path.stat().st_size > self.settings.source_max_playlist_bytes:
+            return SourceValidationResponse(
+                playlist_reachable=False,
+                channel_count=0,
+                group_count=0,
+                estimated_import_time_seconds=0,
+                warnings=[],
+                errors=["Uploaded playlist exceeds the configured maximum size."],
+            )
+        return self._validation_response(
+            self.parser.parse_path(
+                path,
+                include_content_types=self._enabled_content_types(enabled_content_types),
+            ),
+            reachable=True,
+            extra_warnings=[],
+            selected_content_types=self._enabled_content_types(enabled_content_types),
+            requested_content_types=self._requested_content_types(enabled_content_types),
+        )
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
     def create_url_source(
         self,
@@ -134,11 +239,21 @@ class SourceImportService:
         name: str,
         raw_url: str,
         refresh_interval_minutes: int | None,
+<<<<<<< HEAD
+=======
+        enabled_content_types: list[ContentType] | None,
+        confirm_large_import: bool,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         actor: User,
     ) -> SourceCreatedResponse:
         url_result = self.url_validator.validate_source_url(raw_url, resolve_dns=False)
         if not url_result.is_safe or url_result.normalized_url is None:
             raise SourceValidationError(" ".join(url_result.errors))
+<<<<<<< HEAD
+=======
+        selected_content_types = self._enabled_content_types(enabled_content_types)
+        self._ensure_supported_content_type_selection(selected_content_types)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         next_refresh_at = self._next_refresh_time(refresh_interval_minutes)
         source = Source(
             name=name.strip(),
@@ -147,6 +262,11 @@ class SourceImportService:
             config_json={
                 "display_location": url_result.display_url,
                 "refresh_interval_minutes": refresh_interval_minutes,
+<<<<<<< HEAD
+=======
+                "enabled_content_types": sorted(selected_content_types),
+                "large_import_confirmed": confirm_large_import,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             },
             secret_config_encrypted=self.secret_box.encrypt_json({"url": url_result.normalized_url}),
             refresh_interval_minutes=refresh_interval_minutes,
@@ -167,11 +287,26 @@ class SourceImportService:
         filename: str,
         content: bytes,
         refresh_interval_minutes: int | None,
+<<<<<<< HEAD
         actor: User,
     ) -> SourceCreatedResponse:
         validation = self.validate_uploaded_playlist(content)
         if not validation.playlist_reachable:
             raise SourceValidationError(" ".join(validation.errors))
+=======
+        enabled_content_types: list[ContentType] | None,
+        confirm_large_import: bool,
+        actor: User,
+    ) -> SourceCreatedResponse:
+        validation = self.validate_uploaded_playlist(
+            content,
+            enabled_content_types=enabled_content_types,
+        )
+        if not validation.playlist_reachable:
+            raise SourceValidationError(" ".join(validation.errors))
+        selected_content_types = self._enabled_content_types(enabled_content_types)
+        self._ensure_supported_content_type_selection(selected_content_types)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         stored_path = self._store_upload(filename, content)
         source = Source(
             name=name.strip(),
@@ -181,6 +316,54 @@ class SourceImportService:
                 "display_location": self._safe_filename(filename),
                 "upload_filename": self._safe_filename(filename),
                 "refresh_interval_minutes": refresh_interval_minutes,
+<<<<<<< HEAD
+=======
+                "enabled_content_types": sorted(selected_content_types),
+                "large_import_confirmed": confirm_large_import,
+            },
+            secret_config_encrypted=self.secret_box.encrypt_json({"stored_path": str(stored_path)}),
+            refresh_interval_minutes=refresh_interval_minutes,
+            next_refresh_at=self._next_refresh_time(refresh_interval_minutes),
+            is_enabled=True,
+        )
+        self.db.add(source)
+        self.db.flush()
+        self._ensure_source_status(source, "importing", "Queued uploaded playlist import.")
+        job = self._queue_import_job(source, actor=actor, message="Queued uploaded playlist import.")
+        self.db.commit()
+        return SourceCreatedResponse(source=self._source_summary(source), job=self._job_response(job))
+
+    def create_upload_source_from_path(
+        self,
+        *,
+        name: str,
+        filename: str,
+        stored_path: Path,
+        refresh_interval_minutes: int | None,
+        enabled_content_types: list[ContentType] | None,
+        confirm_large_import: bool,
+        actor: User,
+    ) -> SourceCreatedResponse:
+        validation = self.validate_uploaded_playlist_path(
+            stored_path,
+            enabled_content_types=enabled_content_types,
+        )
+        if not validation.playlist_reachable:
+            stored_path.unlink(missing_ok=True)
+            raise SourceValidationError(" ".join(validation.errors))
+        selected_content_types = self._enabled_content_types(enabled_content_types)
+        self._ensure_supported_content_type_selection(selected_content_types)
+        source = Source(
+            name=name.strip(),
+            source_type="m3u_upload",
+            status="importing",
+            config_json={
+                "display_location": self._safe_filename(filename),
+                "upload_filename": self._safe_filename(filename),
+                "refresh_interval_minutes": refresh_interval_minutes,
+                "enabled_content_types": sorted(selected_content_types),
+                "large_import_confirmed": confirm_large_import,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             },
             secret_config_encrypted=self.secret_box.encrypt_json({"stored_path": str(stored_path)}),
             refresh_interval_minutes=refresh_interval_minutes,
@@ -199,8 +382,17 @@ class SourceImportService:
         *,
         name: str,
         refresh_interval_minutes: int | None,
+<<<<<<< HEAD
         actor: User,
     ) -> SourceCreatedResponse:
+=======
+        enabled_content_types: list[ContentType] | None,
+        confirm_large_import: bool,
+        actor: User,
+    ) -> SourceCreatedResponse:
+        selected_content_types = self._enabled_content_types(enabled_content_types)
+        self._ensure_supported_content_type_selection(selected_content_types)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         source = Source(
             name=name.strip(),
             source_type="demo_playlist",
@@ -208,6 +400,11 @@ class SourceImportService:
             config_json={
                 "display_location": "Built-in synthetic playlist",
                 "refresh_interval_minutes": refresh_interval_minutes,
+<<<<<<< HEAD
+=======
+                "enabled_content_types": sorted(selected_content_types),
+                "large_import_confirmed": confirm_large_import,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             },
             refresh_interval_minutes=refresh_interval_minutes,
             next_refresh_at=self._next_refresh_time(refresh_interval_minutes),
@@ -332,6 +529,7 @@ class SourceImportService:
         self.db.add(playlist_import)
         self.db.flush()
         job.playlist_import_id = playlist_import.id
+<<<<<<< HEAD
         self.db.commit()
 
         try:
@@ -342,10 +540,32 @@ class SourceImportService:
             if not parse_result.channels:
                 raise SourceValidationError("No playable channel entries were found.")
             self._store_raw_channels(source, playlist_import, parse_result.channels)
+=======
+        playlist_import_id = playlist_import.id
+        self.db.commit()
+
+        loaded_playlist: LoadedPlaylist | None = None
+        try:
+            loaded_playlist = self._load_playlist(source)
+            self._update_job(job, 25, "Playlist loaded.")
+            selected_content_types = self._source_enabled_content_types(source)
+            parse_result = self.parser.parse_path(
+                loaded_playlist.path,
+                include_content_types=selected_content_types,
+                keep_channels=False,
+            )
+            self._update_job(job, 50, "Playlist parsed.")
+            self._ensure_import_still_active(source)
+            self._ensure_large_import_allowed(source, parse_result)
+            if not parse_result.selected_entry_count:
+                raise SourceValidationError("No selected Live TV entries were found for import.")
+            self._replace_raw_channels(source, playlist_import, loaded_playlist.path, selected_content_types)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             self._update_job(job, 90, "Raw channels stored.")
 
             completed_at = utcnow()
             duration_ms = self._duration_ms(started_at, completed_at)
+<<<<<<< HEAD
             import_status = "warning" if parse_result.warnings or parse_result.failures else "completed"
             playlist_import.status = import_status
             playlist_import.completed_at = completed_at
@@ -356,6 +576,23 @@ class SourceImportService:
             playlist_import.failure_count = len(parse_result.failures)
             playlist_import.warnings_json = parse_result.warnings
             playlist_import.failures_json = parse_result.failures
+=======
+            import_warnings = self._validation_warnings(
+                parse_result,
+                selected_content_types,
+                selected_content_types,
+            )
+            import_status = "warning" if import_warnings or parse_result.failures else "completed"
+            playlist_import.status = import_status
+            playlist_import.completed_at = completed_at
+            playlist_import.duration_ms = duration_ms
+            playlist_import.channel_count = parse_result.selected_entry_count
+            playlist_import.group_count = parse_result.group_count
+            playlist_import.warning_count = len(import_warnings)
+            playlist_import.failure_count = len(parse_result.failures)
+            playlist_import.warnings_json = [redact_text(item) for item in import_warnings]
+            playlist_import.failures_json = [redact_text(item) for item in parse_result.failures]
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             playlist_import.checksum = parse_result.checksum
             playlist_import.source_version = loaded_playlist.source_version
 
@@ -376,7 +613,11 @@ class SourceImportService:
                 status_message,
                 playlist_import=playlist_import,
                 job=job,
+<<<<<<< HEAD
                 channel_count=len(parse_result.channels),
+=======
+                channel_count=parse_result.selected_entry_count,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
                 group_count=parse_result.group_count,
                 checked_at=completed_at,
             )
@@ -385,15 +626,33 @@ class SourceImportService:
             job.message = status_message
             job.completed_at = completed_at
         except Exception as exc:
+<<<<<<< HEAD
             completed_at = utcnow()
             public_message = str(exc) or "Playlist import failed."
+=======
+            self.db.rollback()
+            job = self.db.get(PlaylistImportJob, job_id)
+            source = self.db.get(Source, job.source_id) if job is not None else None
+            playlist_import = self.db.get(PlaylistImport, playlist_import_id)
+            if job is None or source is None or playlist_import is None:
+                raise
+            completed_at = utcnow()
+            public_message = redact_text(str(exc) or "Playlist import failed.")
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             playlist_import.status = "failed"
             playlist_import.completed_at = completed_at
             playlist_import.duration_ms = self._duration_ms(started_at, completed_at)
             playlist_import.failure_reason = public_message
             playlist_import.failures_json = [public_message]
             playlist_import.failure_count = 1
+<<<<<<< HEAD
             source.status = "offline" if isinstance(exc, SourceValidationError) else "failed"
+=======
+            if source.deleted_at is not None or not source.is_enabled:
+                source.status = "disabled"
+            else:
+                source.status = "offline" if isinstance(exc, SourceValidationError) else "failed"
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             source.last_failed_import_at = completed_at
             source.last_error = public_message
             source.next_refresh_at = self._next_refresh_time(source.refresh_interval_minutes)
@@ -406,15 +665,28 @@ class SourceImportService:
                 checked_at=completed_at,
             )
             self._fail_job(job, public_message)
+<<<<<<< HEAD
         self.db.commit()
+=======
+        finally:
+            if loaded_playlist is not None:
+                self._cleanup_loaded_playlist(loaded_playlist)
+        self.db.commit()
+        assert job is not None
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         return self._job_response(job)
 
     def _load_playlist(self, source: Source) -> LoadedPlaylist:
         if source.source_type == "demo_playlist":
             demo_path = Path(__file__).resolve().parents[1] / "fixtures" / "synthetic_demo_playlist.m3u"
+<<<<<<< HEAD
             content = demo_path.read_bytes()
             checksum = hashlib.sha256(content).hexdigest()
             return LoadedPlaylist(content=content, source_version=f"sha256:{checksum[:12]}")
+=======
+            checksum = M3uParser.checksum_path(demo_path)
+            return LoadedPlaylist(path=demo_path, source_version=f"sha256:{checksum[:12]}")
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
         secrets = self.secret_box.decrypt_json(source.secret_config_encrypted)
         if source.source_type == "m3u_url":
@@ -437,16 +709,24 @@ class SourceImportService:
                 ) from exc
             if not path.is_file():
                 raise SourceValidationError("Uploaded playlist file is not available.")
+<<<<<<< HEAD
             content = resolved_path.read_bytes()
             if len(content) > self.settings.source_max_playlist_bytes:
                 raise SourceValidationError("Uploaded playlist exceeds the configured maximum size.")
             checksum = hashlib.sha256(content).hexdigest()
             return LoadedPlaylist(content=content, source_version=f"sha256:{checksum[:12]}")
+=======
+            if resolved_path.stat().st_size > self.settings.source_max_playlist_bytes:
+                raise SourceValidationError("Uploaded playlist exceeds the configured maximum size.")
+            checksum = M3uParser.checksum_path(resolved_path)
+            return LoadedPlaylist(path=resolved_path, source_version=f"sha256:{checksum[:12]}")
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         raise SourceValidationError("Unsupported source type.")
 
     def _fetch_remote_playlist(self, raw_url: str) -> LoadedPlaylist:
         current_url = raw_url
         headers = {"User-Agent": "StreamForge/0.1 playlist-validator"}
+<<<<<<< HEAD
         with httpx.Client(timeout=self.settings.source_request_timeout_seconds, headers=headers) as client:
             for _redirect in range(5):
                 url_result = self.url_validator.validate_source_url(current_url)
@@ -500,6 +780,131 @@ class SourceImportService:
                     url_checksum=hashlib.sha256(channel.original_url.encode("utf-8")).hexdigest(),
                 )
             )
+=======
+        download_path = self._temporary_playlist_path()
+        try:
+            with httpx.Client(timeout=self.settings.source_request_timeout_seconds, headers=headers) as client:
+                for _redirect in range(5):
+                    url_result = self.url_validator.validate_source_url(current_url)
+                    if not url_result.is_safe or url_result.normalized_url is None:
+                        raise SourceValidationError(" ".join(url_result.errors))
+                    try:
+                        with client.stream(
+                            "GET",
+                            url_result.normalized_url,
+                            follow_redirects=False,
+                        ) as response:
+                            if response.is_redirect:
+                                redirect_url = response.headers.get("location")
+                                if not redirect_url:
+                                    raise SourceValidationError("Playlist redirected without a destination.")
+                                current_url = str(httpx.URL(url_result.normalized_url).join(redirect_url))
+                                continue
+                            if response.status_code >= 400:
+                                raise SourceValidationError(f"Playlist returned HTTP {response.status_code}.")
+                            self._write_response_to_path(response, download_path)
+                            checksum = M3uParser.checksum_path(download_path)
+                            return LoadedPlaylist(
+                                path=download_path,
+                                source_version=f"sha256:{checksum[:12]}",
+                                temporary=True,
+                            )
+                    except httpx.TimeoutException as exc:
+                        raise SourceValidationError("Playlist request timed out.") from exc
+                    except httpx.HTTPError as exc:
+                        raise SourceValidationError("Playlist could not be reached.") from exc
+            raise SourceValidationError("Playlist redirected too many times.")
+        except Exception:
+            download_path.unlink(missing_ok=True)
+            raise
+
+    def _replace_raw_channels(
+        self,
+        source: Source,
+        playlist_import: PlaylistImport,
+        playlist_path: Path,
+        enabled_content_types: set[ContentType],
+    ) -> None:
+        self._ensure_import_still_active(source)
+        self.db.execute(delete(RawChannel).where(RawChannel.source_id == source.id))
+        batch: list[dict[str, object]] = []
+        for channel in self.parser.iter_channels_path(
+            playlist_path,
+            include_content_types=enabled_content_types,
+        ):
+            batch.append(self._raw_channel_mapping(source, playlist_import, channel))
+            if len(batch) >= self.settings.source_import_batch_size:
+                self._ensure_import_still_active(source)
+                self.db.bulk_insert_mappings(RawChannel, batch)
+                batch.clear()
+        if batch:
+            self._ensure_import_still_active(source)
+            self.db.bulk_insert_mappings(RawChannel, batch)
+
+    def _raw_channel_mapping(
+        self,
+        source: Source,
+        playlist_import: PlaylistImport,
+        channel: M3uChannel,
+    ) -> dict[str, object]:
+        now = utcnow()
+        return {
+            "id": str(uuid.uuid4()),
+            "created_at": now,
+            "updated_at": now,
+            "source_id": source.id,
+            "playlist_import_id": playlist_import.id,
+            "duplicate_cluster_id": None,
+            "original_name": channel.original_name,
+            "original_group": channel.original_group,
+            "original_url": channel.original_url,
+            "original_tvg_id": channel.original_tvg_id,
+            "original_tvg_name": channel.original_tvg_name,
+            "original_logo_url": channel.original_logo_url,
+            "source_metadata_json": {
+                "duration": channel.duration,
+                "content_type": channel.content_type,
+            },
+            "line_number": channel.line_number,
+            "raw_extinf": channel.raw_extinf,
+            "raw_attributes_json": channel.attributes,
+            "url_checksum": hashlib.sha256(channel.original_url.encode("utf-8")).hexdigest(),
+            "normalized_name": None,
+            "normalized_group": None,
+            "inferred_country": None,
+            "inferred_language": None,
+            "inferred_category": None,
+            "claimed_quality": None,
+            "measured_resolution": None,
+            "measured_frame_rate": None,
+            "codec_information_json": {},
+            "epg_status": "unknown",
+            "health_status": "unknown",
+            "quality_score": None,
+            "reliability_score": None,
+            "visibility_status": "visible",
+            "filtering_explanations_json": [],
+        }
+
+    def _write_response_to_path(self, response: httpx.Response, path: Path) -> None:
+        bytes_written = 0
+        with path.open("wb") as output:
+            for chunk in response.iter_bytes(chunk_size=1024 * 1024):
+                bytes_written += len(chunk)
+                if bytes_written > self.settings.source_max_playlist_bytes:
+                    raise SourceValidationError("Playlist exceeds the configured maximum size.")
+                output.write(chunk)
+
+    def _temporary_playlist_path(self) -> Path:
+        download_dir = Path(self.settings.source_upload_dir) / ".downloads"
+        download_dir.mkdir(parents=True, exist_ok=True)
+        return download_dir / f"{uuid.uuid4()}.m3u"
+
+    @staticmethod
+    def _cleanup_loaded_playlist(playlist: LoadedPlaylist) -> None:
+        if playlist.temporary:
+            playlist.path.unlink(missing_ok=True)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
     def _queue_import_job(self, source: Source, *, actor: User | None, message: str) -> PlaylistImportJob:
         job = PlaylistImportJob(
@@ -531,7 +936,11 @@ class SourceImportService:
             source_status = SourceStatus(source_id=source.id)
             self.db.add(source_status)
         source_status.status = status
+<<<<<<< HEAD
         source_status.message = message
+=======
+        source_status.message = redact_text(message)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         if checked_at is not None:
             source_status.last_checked_at = checked_at
         if status in {"healthy", "warning"}:
@@ -564,14 +973,27 @@ class SourceImportService:
             name=source.name,
             source_type=cast(SourceType, source.source_type),
             status=cast(SourceState, source.status),
+<<<<<<< HEAD
             status_message=source_status.message if source_status else "Source has not been imported yet.",
             display_location=str(source.config_json.get("display_location", "Hidden")),
             is_enabled=source.is_enabled,
+=======
+            status_message=redact_text(source_status.message)
+            if source_status
+            else "Source has not been imported yet.",
+            display_location=redact_text(str(source.config_json.get("display_location", "Hidden"))),
+            is_enabled=source.is_enabled,
+            enabled_content_types=sorted(self._source_enabled_content_types(source)),
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             refresh_interval_minutes=source.refresh_interval_minutes,
             last_updated_at=source.updated_at,
             last_refresh_at=source.last_refresh_at,
             next_refresh_at=source.next_refresh_at,
+<<<<<<< HEAD
             last_error=source.last_error,
+=======
+            last_error=redact_text(source.last_error) if source.last_error else None,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             channel_count=source_status.channel_count if source_status else 0,
             group_count=source_status.group_count if source_status else 0,
             active_job=self._job_response(active_job) if active_job else None,
@@ -584,10 +1006,17 @@ class SourceImportService:
             playlist_import_id=job.playlist_import_id,
             status=cast(ImportJobState, job.status),
             progress_percent=job.progress_percent,
+<<<<<<< HEAD
             message=job.message,
             started_at=job.started_at,
             completed_at=job.completed_at,
             failure_reason=job.failure_reason,
+=======
+            message=redact_text(job.message),
+            started_at=job.started_at,
+            completed_at=job.completed_at,
+            failure_reason=redact_text(job.failure_reason) if job.failure_reason else None,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         )
 
     def _import_history_item(
@@ -608,9 +1037,17 @@ class SourceImportService:
             group_count=playlist_import.group_count,
             warning_count=playlist_import.warning_count,
             failure_count=playlist_import.failure_count,
+<<<<<<< HEAD
             warnings=playlist_import.warnings_json,
             failures=playlist_import.failures_json,
             failure_reason=playlist_import.failure_reason,
+=======
+            warnings=[redact_text(item) for item in playlist_import.warnings_json],
+            failures=[redact_text(item) for item in playlist_import.failures_json],
+            failure_reason=redact_text(playlist_import.failure_reason)
+            if playlist_import.failure_reason
+            else None,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             checksum=playlist_import.checksum,
             source_version=playlist_import.source_version,
         )
@@ -620,6 +1057,7 @@ class SourceImportService:
         parse_result: M3uParseResult,
         *,
         reachable: bool,
+<<<<<<< HEAD
     ) -> SourceValidationResponse:
         errors = parse_result.failures if not parse_result.channels else []
         return SourceValidationResponse(
@@ -628,11 +1066,155 @@ class SourceImportService:
             group_count=parse_result.group_count,
             estimated_import_time_seconds=self._estimate_import_seconds(len(parse_result.channels)),
             warnings=parse_result.warnings + parse_result.failures,
+=======
+        extra_warnings: list[str],
+        selected_content_types: set[ContentType],
+        requested_content_types: set[ContentType],
+    ) -> SourceValidationResponse:
+        errors = parse_result.failures if not parse_result.selected_entry_count else []
+        warnings = [
+            *extra_warnings,
+            *self._validation_warnings(parse_result, selected_content_types, requested_content_types),
+        ]
+        return SourceValidationResponse(
+            playlist_reachable=reachable and not errors,
+            channel_count=parse_result.selected_entry_count,
+            total_entry_count=parse_result.total_entry_count,
+            selected_entry_count=parse_result.selected_entry_count,
+            excluded_entry_count=parse_result.excluded_count,
+            group_count=parse_result.group_count,
+            content_counts=parse_result.content_counts.as_dict(),
+            selected_content_types=sorted(selected_content_types),
+            deferred_content_types=self._deferred_content_types(requested_content_types),
+            estimated_import_time_seconds=self._estimate_import_seconds(parse_result.selected_entry_count),
+            estimated_database_rows=parse_result.selected_entry_count,
+            estimated_database_bytes=self._estimate_database_bytes(parse_result.selected_entry_count),
+            requires_confirmation=parse_result.total_entry_count
+            > self.settings.source_import_confirmation_threshold_entries,
+            confirmation_threshold_entries=self.settings.source_import_confirmation_threshold_entries,
+            metadata_samples=[
+                {
+                    "line_number": sample.line_number,
+                    "name": sample.name,
+                    "group": sample.group,
+                    "tvg_id": sample.tvg_id,
+                    "tvg_name": sample.tvg_name,
+                    "content_type": sample.content_type,
+                }
+                for sample in parse_result.samples
+            ],
+            warnings=warnings + parse_result.failures,
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             errors=errors,
             checksum=parse_result.checksum,
             source_version=f"sha256:{parse_result.checksum[:12]}",
         )
 
+<<<<<<< HEAD
+=======
+    def _validation_warnings(
+        self,
+        parse_result: M3uParseResult,
+        selected_content_types: set[ContentType],
+        requested_content_types: set[ContentType],
+    ) -> list[str]:
+        warnings = list(parse_result.warnings)
+        if parse_result.total_entry_count > self.settings.source_large_playlist_warning_entries:
+            warnings.append(
+                "Playlist is unusually large. Review content-type counts and confirm before importing."
+            )
+        if parse_result.total_entry_count > self.settings.source_import_confirmation_threshold_entries:
+            warnings.append(
+                "Import requires explicit administrator confirmation because the playlist exceeds "
+                f"{self.settings.source_import_confirmation_threshold_entries:,} entries."
+            )
+        estimated_seconds = self._estimate_import_seconds(parse_result.selected_entry_count)
+        if estimated_seconds > 3600:
+            warnings.append(
+                "Estimated import time exceeds one hour. Consider narrowing content-type options before importing."
+            )
+        if parse_result.excluded_count:
+            selected_labels = ", ".join(
+                CONTENT_TYPE_LABELS[item] for item in sorted(selected_content_types)
+            ) or "none"
+            warnings.append(
+                f"{parse_result.excluded_count:,} entries are excluded by the selected import options "
+                f"({selected_labels}). Excluded entries are counted but not stored as RawChannel rows."
+            )
+        if parse_result.total_entry_count and not parse_result.selected_entry_count:
+            warnings.append("No entries match the selected import options; no RawChannel rows will be inserted.")
+        deferred = self._deferred_content_types(requested_content_types)
+        if deferred:
+            labels = ", ".join(CONTENT_TYPE_LABELS[item] for item in deferred)
+            warnings.append(
+                f"{labels} storage is deferred until a safe VOD data model exists; those entries are excluded."
+            )
+        return warnings
+
+    def _ensure_large_import_allowed(self, source: Source, parse_result: M3uParseResult) -> None:
+        if (
+            parse_result.total_entry_count > self.settings.source_import_confirmation_threshold_entries
+            and not bool(source.config_json.get("large_import_confirmed", False))
+        ):
+            raise SourceValidationError(
+                "Playlist import requires explicit administrator confirmation before processing "
+                f"{parse_result.total_entry_count:,} entries."
+            )
+
+    def _ensure_import_still_active(self, source: Source) -> None:
+        self.db.refresh(source)
+        if source.deleted_at is not None:
+            raise SourceValidationError("Playlist import was canceled because the source was deleted.")
+        if not source.is_enabled:
+            raise SourceValidationError("Playlist import was canceled because the source was disabled.")
+
+    def _source_url_warnings(self, raw_url: str) -> list[str]:
+        if raw_url.lower().startswith("http://"):
+            return [
+                "This source uses unencrypted HTTP. Credentials may be exposed in transit; use HTTPS when available."
+            ]
+        return []
+
+    @staticmethod
+    def _requested_content_types(values: list[ContentType] | None) -> set[ContentType]:
+        requested = {value for value in values or ["live_tv"] if value in {"live_tv", "movie", "series", "unknown"}}
+        return requested or {"live_tv"}
+
+    def _enabled_content_types(self, values: list[ContentType] | None) -> set[ContentType]:
+        requested = self._requested_content_types(values)
+        safe_types: set[ContentType] = set()
+        if "live_tv" in requested:
+            safe_types.add("live_tv")
+        if "unknown" in requested:
+            safe_types.add("unknown")
+        if safe_types or values:
+            return safe_types
+        return {"live_tv"}
+
+    @staticmethod
+    def _ensure_supported_content_type_selection(selected_content_types: set[ContentType]) -> None:
+        if not selected_content_types:
+            raise SourceValidationError(
+                "Movies and Series storage is deferred until a safe VOD data model exists. "
+                "Select Live TV or Unknown before importing."
+            )
+
+    def _source_enabled_content_types(self, source: Source) -> set[ContentType]:
+        raw_values = source.config_json.get("enabled_content_types", ["live_tv"])
+        if not isinstance(raw_values, list):
+            return {"live_tv"}
+        values = [
+            cast(ContentType, value)
+            for value in raw_values
+            if value in {"live_tv", "movie", "series", "unknown"}
+        ]
+        return self._enabled_content_types(values)
+
+    @staticmethod
+    def _deferred_content_types(selected_content_types: set[ContentType]) -> list[ContentType]:
+        return [cast(ContentType, item) for item in ("movie", "series") if item in selected_content_types]
+
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
     def _get_active_source(self, source_id: str) -> Source:
         source = self.db.get(Source, source_id)
         if source is None or source.deleted_at is not None:
@@ -645,21 +1227,41 @@ class SourceImportService:
         self.db.commit()
 
     def _fail_job(self, job: PlaylistImportJob, message: str) -> None:
+<<<<<<< HEAD
         job.status = "failed"
         job.progress_percent = 100
         job.message = message
         job.failure_reason = message
+=======
+        redacted_message = redact_text(message)
+        job.status = "failed"
+        job.progress_percent = 100
+        job.message = redacted_message
+        job.failure_reason = redacted_message
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         job.completed_at = utcnow()
 
     def _store_upload(self, filename: str, content: bytes) -> Path:
         upload_dir = Path(self.settings.source_upload_dir)
         upload_dir.mkdir(parents=True, exist_ok=True)
+<<<<<<< HEAD
         safe_name = self._safe_filename(filename)
         stored_path = upload_dir / f"{uuid.uuid4()}-{safe_name}"
+=======
+        stored_path = self.reserve_upload_path(filename)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
         with stored_path.open("wb") as output:
             output.write(content)
         return stored_path
 
+<<<<<<< HEAD
+=======
+    def reserve_upload_path(self, filename: str) -> Path:
+        upload_dir = Path(self.settings.source_upload_dir)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        return upload_dir / f"{uuid.uuid4()}-{self._safe_filename(filename)}"
+
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
     @staticmethod
     def _safe_filename(filename: str) -> str:
         candidate = Path(filename).name.strip()
@@ -667,11 +1269,22 @@ class SourceImportService:
             return "playlist.m3u"
         return "".join(character for character in candidate if character.isalnum() or character in {".", "-", "_"})
 
+<<<<<<< HEAD
     @staticmethod
     def _estimate_import_seconds(channel_count: int) -> int:
         if channel_count <= 0:
             return 0
         return max(1, math.ceil(channel_count / 250))
+=======
+    def _estimate_import_seconds(self, channel_count: int) -> int:
+        if channel_count <= 0:
+            return 0
+        return max(1, math.ceil(channel_count / self.settings.source_estimated_entries_per_second))
+
+    @staticmethod
+    def _estimate_database_bytes(channel_count: int) -> int:
+        return channel_count * 2_048
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
     @staticmethod
     def _next_refresh_time(refresh_interval_minutes: int | None) -> datetime | None:
@@ -684,9 +1297,24 @@ class SourceImportService:
         return int((completed_at - started_at).total_seconds() * 1000)
 
 
+<<<<<<< HEAD
 def copy_upload_to_bytes(upload_file: UploadFile, *, max_bytes: int) -> bytes:
     with upload_file.file as source:
         limited_reader = source.read(max_bytes + 1)
         if len(limited_reader) > max_bytes:
             raise SourceValidationError("Uploaded playlist exceeds the configured maximum size.")
         return limited_reader
+=======
+def copy_upload_to_path(upload_file: UploadFile, destination: Path, *, max_bytes: int) -> None:
+    bytes_written = 0
+    with upload_file.file as source, destination.open("wb") as output:
+        while True:
+            chunk = source.read(1024 * 1024)
+            if not chunk:
+                break
+            bytes_written += len(chunk)
+            if bytes_written > max_bytes:
+                destination.unlink(missing_ok=True)
+                raise SourceValidationError("Uploaded playlist exceeds the configured maximum size.")
+            output.write(chunk)
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)

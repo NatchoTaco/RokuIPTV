@@ -1,9 +1,848 @@
 {
+<<<<<<< HEAD
   "openapi": "3.1.0",
+=======
+  "components": {
+    "schemas": {
+      "AuthResponse": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SetupStateResponse"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserPublic"
+          }
+        },
+        "required": [
+          "user",
+          "setup"
+        ],
+        "type": "object"
+      },
+      "BootstrapAdminRequest": {
+        "properties": {
+          "display_name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "minLength": 12,
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "display_name"
+        ],
+        "type": "object"
+      },
+      "CreateUploadSourceRequest": {
+        "properties": {
+          "confirm_large_import": {
+            "default": false,
+            "type": "boolean"
+          },
+          "enabled_content_types": {
+            "default": "live_tv",
+            "type": "string"
+          },
+          "file": {
+            "format": "binary",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 180,
+            "minLength": 1,
+            "type": "string"
+          },
+          "refresh_interval_minutes": {
+            "maximum": 43200,
+            "minimum": 15,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "file"
+        ],
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "checks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ServiceCheck"
+            },
+            "type": "object"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "setup_complete": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment",
+          "setup_complete",
+          "checks"
+        ],
+        "type": "object"
+      },
+      "MessageResponse": {
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "PlaylistImportHistoryItem": {
+        "properties": {
+          "channel_count": {
+            "type": "integer"
+          },
+          "checksum": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "completed_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "failure_count": {
+            "type": "integer"
+          },
+          "failure_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "failures": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "group_count": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "source_kind": {
+            "enum": [
+              "m3u_url",
+              "m3u_upload",
+              "demo_playlist"
+            ],
+            "type": "string"
+          },
+          "source_name": {
+            "type": "string"
+          },
+          "source_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "started_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "warning",
+              "failed"
+            ],
+            "type": "string"
+          },
+          "warning_count": {
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "source_id",
+          "source_name",
+          "source_kind",
+          "status",
+          "started_at",
+          "completed_at",
+          "duration_ms",
+          "channel_count",
+          "group_count",
+          "warning_count",
+          "failure_count",
+          "warnings",
+          "failures",
+          "failure_reason",
+          "checksum",
+          "source_version"
+        ],
+        "type": "object"
+      },
+      "PlaylistImportHistoryResponse": {
+        "properties": {
+          "imports": {
+            "items": {
+              "$ref": "#/components/schemas/PlaylistImportHistoryItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "imports"
+        ],
+        "type": "object"
+      },
+      "PlaylistImportJobResponse": {
+        "properties": {
+          "completed_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "failure_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "playlist_import_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "progress_percent": {
+            "type": "integer"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_id",
+          "playlist_import_id",
+          "status",
+          "progress_percent",
+          "message",
+          "started_at",
+          "completed_at",
+          "failure_reason"
+        ],
+        "type": "object"
+      },
+      "ServiceCheck": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "SetupStateResponse": {
+        "properties": {
+          "administrator_exists": {
+            "type": "boolean"
+          },
+          "completed_steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "current_step": {
+            "type": "string"
+          },
+          "installation_mode": {
+            "enum": [
+              "local_only",
+              "remote_access",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_complete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_complete",
+          "current_step",
+          "completed_steps",
+          "installation_mode",
+          "administrator_exists"
+        ],
+        "type": "object"
+      },
+      "SetupStateUpdate": {
+        "properties": {
+          "installation_mode": {
+            "enum": [
+              "local_only",
+              "remote_access"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "installation_mode"
+        ],
+        "type": "object"
+      },
+      "SignInRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object"
+      },
+      "SourceCreateDemoRequest": {
+        "properties": {
+          "confirm_large_import": {
+            "default": false,
+            "type": "boolean"
+          },
+          "enabled_content_types": {
+            "default": [
+              "live_tv"
+            ],
+            "items": {
+              "enum": [
+                "live_tv",
+                "movie",
+                "series",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "default": "Synthetic Demonstration Playlist",
+            "type": "string"
+          },
+          "refresh_interval_minutes": {
+            "maximum": 43200,
+            "minimum": 15,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "SourceCreateUrlRequest": {
+        "properties": {
+          "confirm_large_import": {
+            "default": false,
+            "type": "boolean"
+          },
+          "enabled_content_types": {
+            "default": [
+              "live_tv"
+            ],
+            "items": {
+              "enum": [
+                "live_tv",
+                "movie",
+                "series",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 180,
+            "minLength": 1,
+            "type": "string"
+          },
+          "refresh_interval_minutes": {
+            "default": 1440,
+            "maximum": 43200,
+            "minimum": 15,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "url": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url"
+        ],
+        "type": "object"
+      },
+      "SourceCreatedResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/PlaylistImportJobResponse"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceSummaryResponse"
+          }
+        },
+        "required": [
+          "source",
+          "job"
+        ],
+        "type": "object"
+      },
+      "SourceListResponse": {
+        "properties": {
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSummaryResponse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sources"
+        ],
+        "type": "object"
+      },
+      "SourceSummaryResponse": {
+        "properties": {
+          "active_job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlaylistImportJobResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "channel_count": {
+            "type": "integer"
+          },
+          "display_location": {
+            "type": "string"
+          },
+          "enabled_content_types": {
+            "items": {
+              "enum": [
+                "live_tv",
+                "movie",
+                "series",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "group_count": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "is_enabled": {
+            "type": "boolean"
+          },
+          "last_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_refresh_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_refresh_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "refresh_interval_minutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "source_type": {
+            "enum": [
+              "m3u_url",
+              "m3u_upload",
+              "demo_playlist"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "healthy",
+              "importing",
+              "warning",
+              "offline",
+              "failed",
+              "disabled",
+              "pending"
+            ],
+            "type": "string"
+          },
+          "status_message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "source_type",
+          "status",
+          "status_message",
+          "display_location",
+          "is_enabled",
+          "enabled_content_types",
+          "refresh_interval_minutes",
+          "last_updated_at",
+          "last_refresh_at",
+          "next_refresh_at",
+          "last_error",
+          "channel_count",
+          "group_count",
+          "active_job"
+        ],
+        "type": "object"
+      },
+      "SourceUpdateRequest": {
+        "properties": {
+          "is_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "refresh_interval_minutes": {
+            "maximum": 43200,
+            "minimum": 15,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "SourceValidateUrlRequest": {
+        "properties": {
+          "enabled_content_types": {
+            "default": [
+              "live_tv"
+            ],
+            "items": {
+              "enum": [
+                "live_tv",
+                "movie",
+                "series",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "SourceValidationResponse": {
+        "properties": {
+          "channel_count": {
+            "type": "integer"
+          },
+          "checksum": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confirmation_threshold_entries": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "content_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "deferred_content_types": {
+            "items": {
+              "enum": [
+                "live_tv",
+                "movie",
+                "series",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "estimated_database_bytes": {
+            "type": "integer"
+          },
+          "estimated_database_rows": {
+            "type": "integer"
+          },
+          "estimated_import_time_seconds": {
+            "type": "integer"
+          },
+          "excluded_entry_count": {
+            "type": "integer"
+          },
+          "group_count": {
+            "type": "integer"
+          },
+          "metadata_samples": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "playlist_reachable": {
+            "type": "boolean"
+          },
+          "requires_confirmation": {
+            "type": "boolean"
+          },
+          "selected_content_types": {
+            "items": {
+              "enum": [
+                "live_tv",
+                "movie",
+                "series",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "selected_entry_count": {
+            "type": "integer"
+          },
+          "source_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total_entry_count": {
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "playlist_reachable",
+          "channel_count",
+          "group_count",
+          "estimated_import_time_seconds",
+          "total_entry_count",
+          "selected_entry_count",
+          "excluded_entry_count",
+          "content_counts",
+          "selected_content_types",
+          "deferred_content_types",
+          "estimated_database_rows",
+          "estimated_database_bytes",
+          "requires_confirmation",
+          "confirmation_threshold_entries",
+          "metadata_samples",
+          "warnings",
+          "errors",
+          "checksum",
+          "source_version"
+        ],
+        "type": "object"
+      },
+      "UploadPlaylistRequest": {
+        "properties": {
+          "enabled_content_types": {
+            "default": "live_tv",
+            "type": "string"
+          },
+          "file": {
+            "format": "binary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "type": "object"
+      },
+      "UserPublic": {
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "is_admin": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "display_name",
+          "is_admin"
+        ],
+        "type": "object"
+      }
+    }
+  },
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
   "info": {
     "title": "StreamForge API",
     "version": "0.1.0"
   },
+<<<<<<< HEAD
   "paths": {
     "/api/v1/health": {
       "get": {
@@ -50,23 +889,39 @@
         "summary": "Create the first administrator",
         "requestBody": {
           "required": true,
+=======
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/auth/bootstrap-admin": {
+      "post": {
+        "requestBody": {
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BootstrapAdminRequest"
               }
             }
+<<<<<<< HEAD
           }
         },
         "responses": {
           "201": {
             "description": "Administrator created",
+=======
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthResponse"
                 }
               }
+<<<<<<< HEAD
             }
           }
         }
@@ -116,21 +971,37 @@
             }
           }
         }
+=======
+            },
+            "description": "Administrator created"
+          }
+        },
+        "summary": "Create the first administrator",
+        "tags": [
+          "auth"
+        ]
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
       }
     },
     "/api/v1/auth/me": {
       "get": {
+<<<<<<< HEAD
         "tags": ["auth"],
         "summary": "Current user",
         "responses": {
           "200": {
             "description": "Current dashboard user",
+=======
+        "responses": {
+          "200": {
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserPublic"
                 }
               }
+<<<<<<< HEAD
             }
           }
         }
@@ -391,25 +1262,518 @@
         "responses": {
           "200": {
             "description": "Source deleted",
+=======
+            },
+            "description": "Current dashboard user"
+          }
+        },
+        "summary": "Current user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sign-in": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description": "Signed in"
+          }
+        },
+        "summary": "Sign in",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sign-out": {
+      "post": {
+        "responses": {
+          "200": {
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageResponse"
                 }
               }
+<<<<<<< HEAD
             }
           }
         }
+=======
+            },
+            "description": "Signed out"
+          }
+        },
+        "summary": "Sign out",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Service health"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/playlists/imports": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportHistoryResponse"
+                }
+              }
+            },
+            "description": "Import history"
+          }
+        },
+        "summary": "List playlist import history",
+        "tags": [
+          "playlists"
+        ]
+      }
+    },
+    "/api/v1/playlists/jobs/{job_id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportJobResponse"
+                }
+              }
+            },
+            "description": "Import job"
+          }
+        },
+        "summary": "Get playlist import job",
+        "tags": [
+          "playlists"
+        ]
+      }
+    },
+    "/api/v1/playlists/synthetic-demo.m3u": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Synthetic M3U playlist"
+          }
+        },
+        "summary": "Get synthetic demonstration playlist",
+        "tags": [
+          "playlists"
+        ]
+      }
+    },
+    "/api/v1/readiness": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Service is ready"
+          },
+          "503": {
+            "description": "Service is not ready"
+          }
+        },
+        "summary": "Readiness",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/setup/state": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStateResponse"
+                }
+              }
+            },
+            "description": "Setup state"
+          }
+        },
+        "summary": "Get setup state",
+        "tags": [
+          "setup"
+        ]
+      },
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupStateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStateResponse"
+                }
+              }
+            },
+            "description": "Updated setup state"
+          }
+        },
+        "summary": "Update setup state",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/api/v1/sources": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceListResponse"
+                }
+              }
+            },
+            "description": "Source list"
+          }
+        },
+        "summary": "List television sources",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/demo": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCreateDemoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreatedResponse"
+                }
+              }
+            },
+            "description": "Demo source created"
+          }
+        },
+        "summary": "Create synthetic demonstration source and queue import",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/m3u-upload": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreatedResponse"
+                }
+              }
+            },
+            "description": "Source created and import queued"
+          }
+        },
+        "summary": "Create uploaded M3U source and queue import",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/m3u-url": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCreateUrlRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCreatedResponse"
+                }
+              }
+            },
+            "description": "Source created and import queued"
+          }
+        },
+        "summary": "Create remote M3U source and queue import",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/validate-upload": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPlaylistRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceValidationResponse"
+                }
+              }
+            },
+            "description": "Validation result"
+          }
+        },
+        "summary": "Validate uploaded M3U file",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/validate-url": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceValidateUrlRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceValidationResponse"
+                }
+              }
+            },
+            "description": "Validation result"
+          }
+        },
+        "summary": "Validate remote M3U URL",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/{source_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Source deleted"
+          }
+        },
+        "summary": "Soft-delete source",
+        "tags": [
+          "sources"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceListResponse"
+                }
+              }
+            },
+            "description": "Updated source list"
+          }
+        },
+        "summary": "Update source",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/{source_id}/imports": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistImportHistoryResponse"
+                }
+              }
+            },
+            "description": "Import history for source"
+          }
+        },
+        "summary": "List source import history",
+        "tags": [
+          "sources"
+        ]
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
       }
     },
     "/api/v1/sources/{source_id}/refresh": {
       "post": {
+<<<<<<< HEAD
         "tags": ["sources"],
         "summary": "Queue manual source refresh",
         "parameters": [
           {
             "name": "source_id",
             "in": "path",
+=======
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             "required": true,
             "schema": {
               "type": "string"
@@ -418,13 +1782,17 @@
         ],
         "responses": {
           "202": {
+<<<<<<< HEAD
             "description": "Import job queued",
+=======
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PlaylistImportJobResponse"
                 }
               }
+<<<<<<< HEAD
             }
           }
         }
@@ -752,3 +2120,17 @@
     }
   }
 }
+=======
+            },
+            "description": "Import job queued"
+          }
+        },
+        "summary": "Queue manual source refresh",
+        "tags": [
+          "sources"
+        ]
+      }
+    }
+  }
+}
+>>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
