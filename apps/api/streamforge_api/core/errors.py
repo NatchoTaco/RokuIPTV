@@ -54,3 +54,18 @@ class SourceDisabledError(StreamForgeError):
 class ImportJobNotFoundError(StreamForgeError):
     status_code = 404
     public_message = "Import job was not found."
+
+
+class ChannelNotFoundError(StreamForgeError):
+    status_code = 404
+    public_message = "Channel was not found."
+
+
+class NormalizationJobNotFoundError(StreamForgeError):
+    status_code = 404
+    public_message = "Normalization job was not found."
+
+
+class DuplicateClusterNotFoundError(StreamForgeError):
+    status_code = 404
+    public_message = "Duplicate cluster was not found."

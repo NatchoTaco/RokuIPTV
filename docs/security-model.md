@@ -2,7 +2,7 @@
 
 ## Implemented Security Scope
 
-Milestone 1 implements secure local administrator authentication and session management for the dashboard. Milestone 2 adds administrator-only source management, source URL validation, encrypted source secrets, and redacted source responses.
+Milestone 1 implements secure local administrator authentication and session management for the dashboard. Milestone 2 adds administrator-only source management, source URL validation, encrypted source secrets, and redacted source responses. Milestone 3 adds administrator-only channel normalization and cleanup without exposing stream URLs.
 
 Implemented controls:
 
@@ -18,6 +18,8 @@ Implemented controls:
 - Source management APIs require an authenticated administrator.
 - Remote source URLs are encrypted at rest using a mature authenticated-encryption library and a key derived from `STREAMFORGE_SECRET_KEY`.
 - Source URLs are redacted before returning to the dashboard.
+- Channel, cleanup, duplicate, and source-candidate APIs return original and normalized metadata, URL checksums, and explanations, but never raw provider stream URLs.
+- Manual cleanup operations may hide, allow, merge, split, rank, or group imported records, but automatic cleanup does not permanently delete raw provider evidence.
 - User info and sensitive query parameters such as `username`, `password`, `token`, `auth`, and `key` are centrally redacted from API responses, logs, audit details, exceptions, import history, diagnostics-facing messages, and dashboard display text.
 - Unencrypted HTTP sources are allowed for authorized home-lab/provider cases but produce a warning during validation.
 - Unsupported protocols, local file URLs, invalid URL paths, and private/reserved network destinations are rejected by default for remote playlist fetches.

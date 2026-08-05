@@ -1,13 +1,13 @@
 # StreamForge Architecture
 
-`STREAMFORGE_SPEC.md` is the authoritative specification. This document records the implemented architecture through Milestone 2 and the boundaries for later milestones.
+`STREAMFORGE_SPEC.md` is the authoritative specification. This document records the implemented architecture through Milestone 3 and the boundaries for later milestones.
 
 ## System Shape
 
 StreamForge is a self-hosted television management and playback platform composed of:
 
-- `apps/api`: FastAPI backend, database models, migrations, authentication, setup state, health, readiness, source management, playlist ingestion, and structured logging.
-- `apps/dashboard`: React dashboard for setup, authentication, server health, source management, and import history.
+- `apps/api`: FastAPI backend, database models, migrations, authentication, setup state, health, readiness, source management, playlist ingestion, channel normalization, cleanup, and structured logging.
+- `apps/dashboard`: React dashboard for setup, authentication, server health, source management, import history, channel management, and cleanup review.
 - `apps/roku`: Roku application placeholder tree only during Milestone 1.
 - `services/worker`: background worker boundary for asynchronous playlist imports and scheduled refreshes.
 - `services/stream-gateway`: stream gateway placeholder tree only during Milestone 1.
@@ -77,6 +77,28 @@ Key boundaries:
 
 Scheduled refresh uses each source's `refresh_interval_minutes` and `next_refresh_at`. The worker avoids queueing a scheduled refresh when another queued or running import already exists for that source.
 
+## Milestone 3 Channel Normalization and Cleanup
+
+Milestone 3 adds channel normalization, duplicate analysis, filtering, cleanup review, and generated curated lineup rows. It does not add XMLTV, playback, Roku, recording, or timeshift behavior.
+
+The normalization flow is:
+
+Raw channel records -> normalization job -> deterministic inference -> filter decisions -> duplicate clusters -> curated channels and source candidates -> dashboard review.
+
+Key boundaries:
+
+- `RawChannel` remains source evidence: original provider name, group, URL, tvg metadata, raw EXTINF, raw attributes, line number, and URL checksum are preserved. Automatic cleanup updates normalized and review fields but never deletes raw provider records.
+- `NormalizationJob` tracks queued/running/succeeded/failed/canceled progress, processed counts, timestamps, worker ID, and aggregate stats.
+- The normalization engine removes common provider prefixes/suffixes, quality labels, backup/test noise, and whitespace/punctuation while preserving the original name.
+- Inference records plain-language explanations for normalized name, standard group, content type, country, language, and quality.
+- Standard channel groups are seeded as Local, News, Sports, Entertainment, Movies, Kids, Documentary, Lifestyle, Music, Weather, International, Events, Religious, Shopping, Adult, and Other.
+- Content classification remains Live TV, Movie, Series, or Unknown. Unknown playlist entries with live URL or channel cues are normalized as Live TV; VOD storage remains deferred.
+- Filtering profiles are Light, Recommended, Aggressive, and Custom. Manual allowlist decisions override automatic hiding, and manual hidden decisions behave as a blocklist.
+- Duplicate clustering is conservative. Identical names alone are not enough; clustering requires supporting identifiers, compatible country/language context, or quality-variant evidence. Conflicts remain reviewable in the Cleanup Center.
+- Curated lineup rows and source candidates are generated artifacts. Rerunning normalization rebuilds those artifacts idempotently and retains source candidates with primary/backup ranking.
+- The dashboard Channels page uses bounded cursor pagination and filters so it does not load the entire lineup into the browser.
+- Cleanup Center displays queues for duplicates, missing names, test/backup streams, low-quality duplicates, unclassified entries, suspected adult content, shopping/religious entries, foreign-language entries, newly imported channels, and automatically hidden entries.
+
 ## Milestone 2 Risks and Guardrails
 
 - Provider URLs can target unsafe networks, so remote fetches reject unsupported protocols, local file URLs, invalid paths, and private/reserved destinations by default.
@@ -87,9 +109,8 @@ Scheduled refresh uses each source's `refresh_interval_minutes` and `next_refres
 
 ## Deferred Architecture
 
-The following are planned but not implemented through Milestone 2:
+The following are planned but not implemented through Milestone 3:
 
-- Channel normalization, duplicate detection, cleanup, and quality scoring.
 - XMLTV ingestion and guide matching.
 - FFprobe and FFmpeg process integration.
 - Stream gateway, signed playback sessions, live HLS proxying, remuxing, and transcoding.

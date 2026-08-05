@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { getCurrentUser, getSetupState, type User } from "./lib/api";
+import { ChannelsPage } from "./pages/ChannelsPage";
+import { CleanupCenterPage } from "./pages/CleanupCenterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { SignInPage } from "./pages/SignInPage";
 import { SourcesPage } from "./pages/SourcesPage";
@@ -59,6 +61,14 @@ function AppRoutes() {
       <Route
         path="/sources"
         element={<ProtectedPage render={(user) => <SourcesPage user={user} />} />}
+      />
+      <Route
+        path="/channels"
+        element={<ProtectedPage render={(user) => <ChannelsPage user={user} />} />}
+      />
+      <Route
+        path="/cleanup"
+        element={<ProtectedPage render={(user) => <CleanupCenterPage user={user} />} />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

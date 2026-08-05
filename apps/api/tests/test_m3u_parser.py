@@ -67,6 +67,23 @@ https://example.com/content/4001.ts
     assert result.samples[0].name == "News, Local"
 
 
+def test_m3u_parser_handles_case_variants_unquoted_values_and_unknown_live_urls() -> None:
+    playlist = """#EXTM3U
+#EXTINF:-1 TVG-ID=demo.local GROUP-TITLE=Unknown tvg-name='US: Local Mystery HD',US: Local Mystery HD
+https://example.com/live/user/pass/4001.m3u8
+#EXTINF:-1 tvg-id=demo.provider group="Sports" provider-channel-id=abc-123,Provider Sports
+https://example.com/channel/user/pass/4002.ts
+"""
+
+    result = M3uParser().parse_text(playlist, include_content_types={"live_tv", "unknown"})
+
+    assert result.total_entry_count == 2
+    assert result.content_counts.live_tv == 2
+    assert result.channels[0].original_group == "Unknown"
+    assert result.channels[0].attributes["tvg-id"] == "demo.local"
+    assert result.channels[1].attributes["provider-channel-id"] == "abc-123"
+
+
 def test_m3u_parser_summarizes_large_synthetic_playlist_without_real_provider_data() -> None:
     lines = ["#EXTM3U"]
     for index in range(1, 1001):
