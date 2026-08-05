@@ -33,6 +33,7 @@ from streamforge_api.models.tables import (
     StreamHealthResult,
     SystemSetting,
     User,
+    utcnow,
 )
 
 __all__ = [
@@ -70,4 +71,5 @@ __all__ = [
     "StreamHealthResult",
     "SystemSetting",
     "User",
+    "utcnow",
 ]
