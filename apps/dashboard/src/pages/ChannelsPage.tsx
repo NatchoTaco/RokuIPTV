@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Layers3, RefreshCw, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Check, Layers3, RefreshCw, Search, ShieldCheck, ShieldOff, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { AppShell } from "../components/AppShell";
@@ -15,6 +15,7 @@ import {
   type FilterProfile,
   type User,
 } from "../lib/api";
+import { channelProtectionActionLabel, nextChannelProtectionState, visibilityFilterOptions } from "../lib/protection";
 
 type DuplicateFilter = "all" | "duplicates" | "unique";
 
@@ -66,6 +67,9 @@ export function ChannelsPage({ user }: { user: User }) {
 
   const channels = channelsQuery.data?.items ?? [];
   const selectedCount = selectedIds.size;
+  const selectedProtectedCount = channels.filter(
+    (channel) => selectedIds.has(channel.id) && channel.protected_from_auto_merge,
+  ).length;
   const allPageSelected = channels.length > 0 && channels.every((channel) => selectedIds.has(channel.id));
 
   function resetCursor() {
@@ -77,6 +81,14 @@ export function ChannelsPage({ user }: { user: User }) {
     await Promise.all(
       [...selectedIds].map((channelId) =>
         updateMutation.mutateAsync({ channelId, payload: { visibility_status: visibilityStatus } }),
+      ),
+    );
+  }
+
+  async function bulkUnprotect() {
+    await Promise.all(
+      [...selectedIds].map((channelId) =>
+        updateMutation.mutateAsync({ channelId, payload: { protected_from_auto_merge: false } }),
       ),
     );
   }
@@ -156,7 +168,7 @@ export function ChannelsPage({ user }: { user: User }) {
             setVisibility(value);
             resetCursor();
           }}
-          options={["visible", "hidden", "always_visible"]}
+          options={[...visibilityFilterOptions]}
         />
         <SelectFilter
           label="Content"
@@ -186,6 +198,9 @@ export function ChannelsPage({ user }: { user: User }) {
           </Button>
           <Button tone="secondary" onClick={() => void bulkVisibility("hidden")}>
             Hide selected
+          </Button>
+          <Button tone="secondary" onClick={() => void bulkUnprotect()} disabled={selectedProtectedCount === 0}>
+            Unprotect selected ({selectedProtectedCount})
           </Button>
           <Button tone="ghost" onClick={() => setSelectedIds(new Set())}>
             Clear
@@ -220,7 +235,12 @@ export function ChannelsPage({ user }: { user: User }) {
         }}
         onAllow={(channelId) => updateMutation.mutate({ channelId, payload: { visibility_status: "always_visible" } })}
         onHide={(channelId) => updateMutation.mutate({ channelId, payload: { visibility_status: "hidden" } })}
-        onProtect={(channelId) => updateMutation.mutate({ channelId, payload: { protected_from_auto_merge: true } })}
+        onToggleProtection={(channel) =>
+          updateMutation.mutate({
+            channelId: channel.id,
+            payload: { protected_from_auto_merge: nextChannelProtectionState(channel) },
+          })
+        }
         onCandidates={setCandidateChannelId}
       />
 
@@ -269,7 +289,7 @@ function ChannelTable({
   onEdit,
   onAllow,
   onHide,
-  onProtect,
+  onToggleProtection,
   onCandidates,
 }: {
   channels: ChannelSummary[];
@@ -281,7 +301,7 @@ function ChannelTable({
   onEdit: (channel: ChannelSummary) => void;
   onAllow: (channelId: string) => void;
   onHide: (channelId: string) => void;
-  onProtect: (channelId: string) => void;
+  onToggleProtection: (channel: ChannelSummary) => void;
   onCandidates: (channelId: string) => void;
 }) {
   if (isLoading) {
@@ -335,6 +355,7 @@ function ChannelTable({
             <div className="space-y-2">
               <Badge label={channel.visibility_status} />
               {channel.duplicate_cluster_id ? <Badge label="duplicate" tone="amber" /> : null}
+              {channel.protected_from_auto_merge ? <Badge label="protected" tone="forge" /> : null}
             </div>
             <div className="flex flex-wrap gap-2">
               <Button tone="ghost" onClick={() => onEdit(channel)}>
@@ -346,8 +367,18 @@ function ChannelTable({
               <Button tone="ghost" onClick={() => onHide(channel.id)}>
                 Hide
               </Button>
-              <Button tone="ghost" icon={<ShieldCheck aria-hidden className="h-4 w-4" />} onClick={() => onProtect(channel.id)}>
-                Protect
+              <Button
+                tone="ghost"
+                icon={
+                  channel.protected_from_auto_merge ? (
+                    <ShieldOff aria-hidden className="h-4 w-4" />
+                  ) : (
+                    <ShieldCheck aria-hidden className="h-4 w-4" />
+                  )
+                }
+                onClick={() => onToggleProtection(channel)}
+              >
+                {channelProtectionActionLabel(channel)}
               </Button>
               <Button tone="ghost" icon={<Layers3 aria-hidden className="h-4 w-4" />} onClick={() => onCandidates(channel.id)}>
                 Candidates
@@ -428,11 +459,13 @@ function SelectFilter({
   );
 }
 
-function Badge({ label, tone = "zinc" }: { label: string; tone?: "zinc" | "amber" }) {
+function Badge({ label, tone = "zinc" }: { label: string; tone?: "zinc" | "amber" | "forge" }) {
   const className =
-    tone === "amber"
-      ? "border-amber-500/30 bg-amber-500/10 text-amber-100"
-      : "border-zinc-700 bg-zinc-950 text-zinc-300";
+    tone === "forge"
+      ? "border-forge-500/30 bg-forge-500/10 text-forge-100"
+      : tone === "amber"
+        ? "border-amber-500/30 bg-amber-500/10 text-amber-100"
+        : "border-zinc-700 bg-zinc-950 text-zinc-300";
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${className}`}>{optionLabel(label)}</span>;
 }
 

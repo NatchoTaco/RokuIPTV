@@ -109,6 +109,7 @@ Create duplicate clusters with:
 - Ability to merge manually
 - Ability to split an incorrect cluster
 - Ability to protect a channel from future automatic merging
+- Ability to remove manual protection without deleting, hiding, merging, or altering the channel
 
 Only automatically merge at a conservative configurable threshold. Uncertain cases must appear in the Cleanup Center.
 
@@ -173,6 +174,9 @@ Support:
 - Manual group assignment
 - Always allow
 - Always hide
+- Protect and unprotect
+- Bulk unprotect protected channels
+- Filter to protected channels
 - View source candidates
 
 ### Cleanup Center
@@ -188,6 +192,8 @@ Show queues for:
 - Shopping and religious channels
 - Foreign-language channels
 - Newly imported channels
+
+The Cleanup Center must allow protected duplicate clusters to be unprotected and must include a confirmed administrative action to clear all manual protection overrides while preserving explicit Allow and Hide decisions.
 - Automatically hidden entries
 
 Every recommendation must show a plain-language reason.

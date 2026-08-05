@@ -1,22 +1,32 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, GitMerge, Scissors, ShieldCheck, Wand2 } from "lucide-react";
+import { CheckCircle2, GitMerge, Scissors, ShieldCheck, ShieldOff, Wand2 } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "../components/AppShell";
 import { Button } from "../components/Button";
 import {
   applyCleanupProfile,
+  clearManualProtections,
+  getProtectionSummary,
   listCleanupQueues,
   listDuplicateClusters,
   mergeDuplicateCluster,
   previewCleanupProfile,
   protectDuplicateCluster,
   splitDuplicateCluster,
+  unprotectDuplicateCluster,
   type CleanupPreview,
   type DuplicateCluster,
   type FilterProfile,
   type User,
 } from "../lib/api";
+import {
+  clearProtectionsConfirmation,
+  duplicateProtectionAction,
+  duplicateProtectionActionLabel,
+} from "../lib/protection";
+
+type DuplicateAction = "merge" | "split" | "protect" | "unprotect";
 
 export function CleanupCenterPage({ user }: { user: User }) {
   const queryClient = useQueryClient();
@@ -31,6 +41,11 @@ export function CleanupCenterPage({ user }: { user: User }) {
     queryFn: listDuplicateClusters,
     refetchInterval: 5000,
   });
+  const protectionsQuery = useQuery({
+    queryKey: ["cleanup", "protections"],
+    queryFn: getProtectionSummary,
+    refetchInterval: 5000,
+  });
   const previewMutation = useMutation({
     mutationFn: previewCleanupProfile,
   });
@@ -41,23 +56,51 @@ export function CleanupCenterPage({ user }: { user: User }) {
       await queryClient.invalidateQueries({ queryKey: ["cleanup"] });
     },
   });
+  function refreshPreviewIfVisible() {
+    if (previewMutation.data ?? applyMutation.data) {
+      previewMutation.mutate(profile);
+    }
+  }
+
   const duplicateMutation = useMutation({
-    mutationFn: ({ clusterId, action }: { clusterId: string; action: "merge" | "split" | "protect" }) => {
+    mutationFn: ({ clusterId, action }: { clusterId: string; action: DuplicateAction }) => {
       if (action === "merge") {
         return mergeDuplicateCluster(clusterId);
       }
       if (action === "split") {
         return splitDuplicateCluster(clusterId);
       }
+      if (action === "unprotect") {
+        return unprotectDuplicateCluster(clusterId);
+      }
       return protectDuplicateCluster(clusterId);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["channels"] });
       await queryClient.invalidateQueries({ queryKey: ["cleanup"] });
+      refreshPreviewIfVisible();
+    },
+  });
+  const clearProtectionsMutation = useMutation({
+    mutationFn: clearManualProtections,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["channels"] });
+      await queryClient.invalidateQueries({ queryKey: ["cleanup"] });
+      refreshPreviewIfVisible();
     },
   });
 
   const activePreview = applyMutation.data ?? previewMutation.data;
+  const totalProtectionCount = protectionsQuery.data?.total_protection_count ?? 0;
+
+  function confirmClearProtections() {
+    if (totalProtectionCount === 0) {
+      return;
+    }
+    if (window.confirm(clearProtectionsConfirmation(totalProtectionCount))) {
+      clearProtectionsMutation.mutate();
+    }
+  }
 
   return (
     <AppShell user={user}>
@@ -95,6 +138,14 @@ export function CleanupCenterPage({ user }: { user: User }) {
             disabled={applyMutation.isPending}
           >
             Apply profile
+          </Button>
+          <Button
+            tone="secondary"
+            icon={<ShieldOff aria-hidden className="h-4 w-4" />}
+            onClick={confirmClearProtections}
+            disabled={totalProtectionCount === 0 || clearProtectionsMutation.isPending}
+          >
+            Clear protections ({totalProtectionCount.toLocaleString()})
           </Button>
         </div>
       </div>
@@ -175,8 +226,10 @@ function DuplicateClusterCard({
   onAction,
 }: {
   cluster: DuplicateCluster;
-  onAction: (action: "merge" | "split" | "protect") => void;
+  onAction: (action: DuplicateAction) => void;
 }) {
+  const protectionAction = duplicateProtectionAction(cluster);
+  const isProtected = protectionAction === "unprotect";
   return (
     <article className="rounded-md border border-zinc-800 bg-zinc-950 p-4">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
@@ -199,8 +252,18 @@ function DuplicateClusterCard({
           <Button tone="ghost" icon={<Scissors aria-hidden className="h-4 w-4" />} onClick={() => onAction("split")}>
             Split
           </Button>
-          <Button tone="ghost" icon={<ShieldCheck aria-hidden className="h-4 w-4" />} onClick={() => onAction("protect")}>
-            Protect
+          <Button
+            tone="ghost"
+            icon={
+              isProtected ? (
+                <ShieldOff aria-hidden className="h-4 w-4" />
+              ) : (
+                <ShieldCheck aria-hidden className="h-4 w-4" />
+              )
+            }
+            onClick={() => onAction(protectionAction)}
+          >
+            {duplicateProtectionActionLabel(cluster)}
           </Button>
         </div>
       </div>

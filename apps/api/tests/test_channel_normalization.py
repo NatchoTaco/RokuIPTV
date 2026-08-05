@@ -291,3 +291,182 @@ def test_channel_api_normalizes_and_never_returns_stream_credentials(
     assert "provider-user" not in combined
     assert "provider-pass" not in combined
     assert "provider-token" not in combined
+
+
+def test_channel_protect_unprotect_round_trip_preserves_visibility_and_preview(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    bootstrap_admin(client)
+    source = make_source(db_session, "Manual Protection Provider")
+    channel = add_raw_channel(
+        db_session,
+        source,
+        name="US: Test Backup SD",
+        group=None,
+        tvg_id="manual.protection",
+        url="https://example.com/live/provider/channel.m3u8",
+        content_type="live_tv",
+    )
+    db_session.commit()
+
+    protected_response = client.patch(
+        f"/api/v1/channels/{channel.id}",
+        json={"visibility_status": "always_visible", "protected_from_auto_merge": True},
+    )
+    protected_filter_response = client.get("/api/v1/channels?visibility_status=protected")
+    protected_preview_response = client.post("/api/v1/cleanup/preview", json={"profile": "aggressive"})
+
+    assert protected_response.status_code == 200
+    assert protected_response.json()["protected_from_auto_merge"] is True
+    assert protected_response.json()["visibility_status"] == "always_visible"
+    assert protected_filter_response.status_code == 200
+    assert [item["id"] for item in protected_filter_response.json()["items"]] == [channel.id]
+    assert protected_preview_response.status_code == 200
+    assert protected_preview_response.json()["protected_count"] == 1
+
+    unprotected_response = client.patch(
+        f"/api/v1/channels/{channel.id}",
+        json={"protected_from_auto_merge": False},
+    )
+    unprotected_filter_response = client.get("/api/v1/channels?visibility_status=protected")
+    unprotected_preview_response = client.post("/api/v1/cleanup/preview", json={"profile": "aggressive"})
+    db_session.expire_all()
+    persisted_channel = db_session.get(RawChannel, channel.id)
+
+    assert unprotected_response.status_code == 200
+    assert unprotected_response.json()["protected_from_auto_merge"] is False
+    assert unprotected_response.json()["visibility_status"] == "always_visible"
+    assert unprotected_filter_response.status_code == 200
+    assert unprotected_filter_response.json()["items"] == []
+    assert unprotected_preview_response.status_code == 200
+    assert unprotected_preview_response.json()["protected_count"] == 0
+    assert persisted_channel is not None
+    assert persisted_channel.protected_from_auto_merge is False
+    assert persisted_channel.manual_visibility_status == "always_visible"
+    assert persisted_channel.visibility_status == "always_visible"
+
+
+def test_duplicate_cluster_protect_unprotect_preserves_membership_and_visibility(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    bootstrap_admin(client)
+    source = make_source(db_session, "Duplicate Protection Provider")
+    add_raw_channel(
+        db_session,
+        source,
+        name="US: Demo News HD",
+        group=None,
+        tvg_id="duplicate.protection",
+        url="https://example.com/live/demo/news-hd.m3u8",
+        content_type="live_tv",
+    )
+    hidden_channel = add_raw_channel(
+        db_session,
+        source,
+        name="US: Demo News SD",
+        group=None,
+        tvg_id="duplicate.protection",
+        url="https://example.com/live/demo/news-sd.m3u8",
+        content_type="live_tv",
+    )
+    db_session.commit()
+
+    job_response = client.post(
+        "/api/v1/channels/normalization-jobs",
+        json={"source_id": source.id, "profile": "recommended", "process_now": True},
+    )
+    db_session.expire_all()
+    cluster = db_session.scalar(select(DuplicateCluster))
+
+    assert job_response.status_code == 202
+    assert cluster is not None
+
+    persisted_hidden_channel = db_session.get(RawChannel, hidden_channel.id)
+    assert persisted_hidden_channel is not None
+    persisted_hidden_channel.manual_visibility_status = "hidden"
+    persisted_hidden_channel.visibility_status = "hidden"
+    db_session.commit()
+
+    protected_response = client.post(f"/api/v1/cleanup/duplicates/{cluster.id}/protect")
+    db_session.expire_all()
+    protected_channels = db_session.scalars(
+        select(RawChannel).where(RawChannel.duplicate_cluster_id == cluster.id)
+    ).all()
+
+    assert protected_response.status_code == 200
+    assert protected_response.json()["cluster"]["review_status"] == "protected"
+    assert len(protected_channels) == 2
+    assert all(channel.protected_from_auto_merge for channel in protected_channels)
+
+    unprotected_response = client.post(f"/api/v1/cleanup/duplicates/{cluster.id}/unprotect")
+    db_session.expire_all()
+    unprotected_cluster = db_session.get(DuplicateCluster, cluster.id)
+    unprotected_channels = db_session.scalars(
+        select(RawChannel).where(RawChannel.duplicate_cluster_id == cluster.id)
+    ).all()
+    persisted_hidden_channel = db_session.get(RawChannel, hidden_channel.id)
+
+    assert unprotected_response.status_code == 200
+    assert unprotected_response.json()["cluster"]["review_status"] == "pending_review"
+    assert unprotected_cluster is not None
+    assert unprotected_cluster.review_status == "pending_review"
+    assert len(unprotected_channels) == 2
+    assert all(not channel.protected_from_auto_merge for channel in unprotected_channels)
+    assert persisted_hidden_channel is not None
+    assert persisted_hidden_channel.manual_visibility_status == "hidden"
+    assert persisted_hidden_channel.visibility_status == "hidden"
+
+
+def test_clear_all_manual_protections_preserves_allow_and_hide_decisions(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    bootstrap_admin(client)
+    source = make_source(db_session, "Clear Protections Provider")
+    allowed_channel = add_raw_channel(
+        db_session,
+        source,
+        name="US: Allowed News HD",
+        url="https://example.com/live/demo/allowed.m3u8",
+        content_type="live_tv",
+    )
+    hidden_channel = add_raw_channel(
+        db_session,
+        source,
+        name="US: Hidden News HD",
+        url="https://example.com/live/demo/hidden.m3u8",
+        content_type="live_tv",
+    )
+    allowed_channel.manual_visibility_status = "always_visible"
+    allowed_channel.visibility_status = "always_visible"
+    allowed_channel.protected_from_auto_merge = True
+    hidden_channel.manual_visibility_status = "hidden"
+    hidden_channel.visibility_status = "hidden"
+    hidden_channel.protected_from_auto_merge = True
+    db_session.commit()
+
+    summary_response = client.get("/api/v1/cleanup/protections")
+    clear_response = client.post("/api/v1/cleanup/protections/clear")
+    preview_response = client.post("/api/v1/cleanup/preview", json={"profile": "aggressive"})
+    db_session.expire_all()
+    persisted_allowed_channel = db_session.get(RawChannel, allowed_channel.id)
+    persisted_hidden_channel = db_session.get(RawChannel, hidden_channel.id)
+
+    assert summary_response.status_code == 200
+    assert summary_response.json()["protected_channel_count"] == 2
+    assert summary_response.json()["total_protection_count"] == 2
+    assert clear_response.status_code == 200
+    assert clear_response.json()["total_protection_count"] == 0
+    assert "2 manual protection override" in clear_response.json()["message"]
+    assert preview_response.status_code == 200
+    assert preview_response.json()["protected_count"] == 0
+    assert persisted_allowed_channel is not None
+    assert persisted_allowed_channel.protected_from_auto_merge is False
+    assert persisted_allowed_channel.manual_visibility_status == "always_visible"
+    assert persisted_allowed_channel.visibility_status == "always_visible"
+    assert persisted_hidden_channel is not None
+    assert persisted_hidden_channel.protected_from_auto_merge is False
+    assert persisted_hidden_channel.manual_visibility_status == "hidden"
+    assert persisted_hidden_channel.visibility_status == "hidden"
