@@ -19,6 +19,7 @@ const sourceStateSchema = z.enum([
 ]);
 const importJobStateSchema = z.enum(["queued", "running", "succeeded", "failed"]);
 const playlistImportStateSchema = z.enum(["queued", "running", "completed", "warning", "failed"]);
+const contentTypeSchema = z.enum(["live_tv", "movie", "series", "unknown"]);
 
 export const setupStateSchema = z.object({
   is_complete: z.boolean(),
@@ -58,8 +59,19 @@ export const publicSettingsSchema = z.object({
 export const sourceValidationSchema = z.object({
   playlist_reachable: z.boolean(),
   channel_count: z.number(),
+  total_entry_count: z.number(),
+  selected_entry_count: z.number(),
+  excluded_entry_count: z.number(),
   group_count: z.number(),
+  content_counts: z.record(z.number()),
+  selected_content_types: z.array(contentTypeSchema),
+  deferred_content_types: z.array(contentTypeSchema),
   estimated_import_time_seconds: z.number(),
+  estimated_database_rows: z.number(),
+  estimated_database_bytes: z.number(),
+  requires_confirmation: z.boolean(),
+  confirmation_threshold_entries: z.number().nullable(),
+  metadata_samples: z.array(z.record(z.unknown())),
   warnings: z.array(z.string()),
   errors: z.array(z.string()),
   checksum: z.string().nullable(),
@@ -86,6 +98,7 @@ export const sourceSummarySchema = z.object({
   status_message: z.string(),
   display_location: z.string(),
   is_enabled: z.boolean(),
+  enabled_content_types: z.array(contentTypeSchema),
   refresh_interval_minutes: z.number().nullable(),
   last_updated_at: z.string(),
   last_refresh_at: z.string().nullable(),
@@ -136,6 +149,7 @@ export type HealthResponse = z.infer<typeof healthResponseSchema>;
 export type PublicSettings = z.infer<typeof publicSettingsSchema>;
 export type SourceType = z.infer<typeof sourceTypeSchema>;
 export type SourceState = z.infer<typeof sourceStateSchema>;
+export type ContentType = z.infer<typeof contentTypeSchema>;
 export type SourceValidation = z.infer<typeof sourceValidationSchema>;
 export type PlaylistImportJob = z.infer<typeof playlistImportJobSchema>;
 export type SourceSummary = z.infer<typeof sourceSummarySchema>;
@@ -232,15 +246,16 @@ export function listSources(): Promise<SourceList> {
   return fetchJson("/api/v1/sources", sourceListSchema);
 }
 
-export function validateM3uUrl(url: string): Promise<SourceValidation> {
+export function validateM3uUrl(url: string, enabledContentTypes: ContentType[]): Promise<SourceValidation> {
   return fetchJson("/api/v1/sources/validate-url", sourceValidationSchema, {
     method: "POST",
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, enabled_content_types: enabledContentTypes }),
   });
 }
 
-export function validateM3uUpload(file: File): Promise<SourceValidation> {
+export function validateM3uUpload(file: File, enabledContentTypes: ContentType[]): Promise<SourceValidation> {
   const formData = new FormData();
+  formData.append("enabled_content_types", enabledContentTypes.join(","));
   formData.append("file", file);
   return fetchJson("/api/v1/sources/validate-upload", sourceValidationSchema, {
     method: "POST",
@@ -252,6 +267,8 @@ export function createM3uUrlSource(payload: {
   name: string;
   url: string;
   refresh_interval_minutes: number | null;
+  enabled_content_types: ContentType[];
+  confirm_large_import: boolean;
 }): Promise<SourceCreated> {
   return fetchJson("/api/v1/sources/m3u-url", sourceCreatedSchema, {
     method: "POST",
@@ -263,12 +280,16 @@ export function createM3uUploadSource(payload: {
   name: string;
   file: File;
   refresh_interval_minutes: number | null;
+  enabled_content_types: ContentType[];
+  confirm_large_import: boolean;
 }): Promise<SourceCreated> {
   const formData = new FormData();
   formData.append("name", payload.name);
   if (payload.refresh_interval_minutes !== null) {
     formData.append("refresh_interval_minutes", String(payload.refresh_interval_minutes));
   }
+  formData.append("enabled_content_types", payload.enabled_content_types.join(","));
+  formData.append("confirm_large_import", String(payload.confirm_large_import));
   formData.append("file", payload.file);
   return fetchJson("/api/v1/sources/m3u-upload", sourceCreatedSchema, {
     method: "POST",
@@ -279,7 +300,12 @@ export function createM3uUploadSource(payload: {
 export function createDemoSource(): Promise<SourceCreated> {
   return fetchJson("/api/v1/sources/demo", sourceCreatedSchema, {
     method: "POST",
-    body: JSON.stringify({ name: "Synthetic Demonstration Playlist", refresh_interval_minutes: null }),
+    body: JSON.stringify({
+      name: "Synthetic Demonstration Playlist",
+      refresh_interval_minutes: null,
+      enabled_content_types: ["live_tv"],
+      confirm_large_import: false,
+    }),
   });
 }
 

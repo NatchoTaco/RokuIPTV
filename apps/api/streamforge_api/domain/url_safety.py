@@ -5,6 +5,8 @@ import socket
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
+from streamforge_api.core.redaction import redact_url
+
 
 @dataclass(frozen=True)
 class UrlSafetyResult:
@@ -55,7 +57,7 @@ class SafeUrlValidator:
         if enforce_public_network and not self.allow_private_destinations:
             errors.extend(self._private_destination_errors(host, resolve_dns=resolve_dns))
 
-        display_url = self.redact_url(stripped_url)
+        display_url = redact_url(stripped_url)
         return UrlSafetyResult(not errors, stripped_url if not errors else None, display_url, errors)
 
     def _private_destination_errors(self, host: str, *, resolve_dns: bool) -> list[str]:
@@ -90,12 +92,3 @@ class SafeUrlValidator:
                     "Enable private source URLs only for trusted home-lab sources."
                 ]
         return []
-
-    @staticmethod
-    def redact_url(raw_url: str) -> str:
-        parsed = urlparse(raw_url)
-        host = parsed.hostname or ""
-        port = f":{parsed.port}" if parsed.port else ""
-        path = parsed.path or ""
-        query = "?..." if parsed.query else ""
-        return f"{parsed.scheme}://{host}{port}{path}{query}"

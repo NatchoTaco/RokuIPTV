@@ -18,6 +18,8 @@ Implemented controls:
 - Source management APIs require an authenticated administrator.
 - Remote source URLs are encrypted at rest using a mature authenticated-encryption library and a key derived from `STREAMFORGE_SECRET_KEY`.
 - Source URLs are redacted before returning to the dashboard.
+- User info and sensitive query parameters such as `username`, `password`, `token`, `auth`, and `key` are centrally redacted from API responses, logs, audit details, exceptions, import history, diagnostics-facing messages, and dashboard display text.
+- Unencrypted HTTP sources are allowed for authorized home-lab/provider cases but produce a warning during validation.
 - Unsupported protocols, local file URLs, invalid URL paths, and private/reserved network destinations are rejected by default for remote playlist fetches.
 - Uploaded playlists are stored with generated sanitized names under `STREAMFORGE_SOURCE_UPLOAD_DIR`.
 

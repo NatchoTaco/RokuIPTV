@@ -4,6 +4,8 @@ from collections.abc import Callable
 
 import redis
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -12,6 +14,7 @@ from streamforge_api.api import api_router
 from streamforge_api.core.config import Settings, get_settings
 from streamforge_api.core.errors import StreamForgeError
 from streamforge_api.core.logging import configure_logging, request_logging_middleware
+from streamforge_api.core.redaction import redact_payload
 from streamforge_api.db.session import create_engine_from_settings, create_session_factory
 
 
@@ -56,6 +59,16 @@ def create_app(
     @app.exception_handler(StreamForgeError)
     async def streamforge_error_handler(_request: Request, exc: StreamForgeError) -> JSONResponse:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.public_message})
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_error_handler(
+        _request: Request,
+        exc: RequestValidationError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content={"detail": jsonable_encoder(redact_payload(exc.errors()))},
+        )
 
     return app
 
