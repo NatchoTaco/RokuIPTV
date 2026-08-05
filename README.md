@@ -24,12 +24,9 @@ Implemented scope:
 - Sources dashboard page.
 - Add Source wizard for remote M3U URL and uploaded M3U files.
 - Safe source validation with channel count, group count, warnings, failures, checksum, and estimated import time.
-<<<<<<< HEAD
-=======
 - Credential redaction for source URLs in API responses, logs, import history, diagnostics-facing messages, and dashboard displays.
 - Large-playlist safeguards with content-type counts, database-impact estimates, metadata samples without URLs, and explicit confirmation above the configured threshold.
 - Non-destructive content classification for Live TV, Movies, Series, and Unknown. Movies and Series are excluded in Milestone 2 because VOD storage is deferred.
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 - Background worker for queued playlist imports and scheduled refreshes.
 - Import history with progress and error reporting.
 - Raw channel storage without cleanup, normalization, filtering, duplicate detection, or EPG matching.
@@ -83,12 +80,8 @@ Add an M3U source:
 4. Enter a source name.
 5. Select `Remote M3U URL` or `Upload M3U file`.
 6. Validate the playlist.
-<<<<<<< HEAD
-7. Choose `Create and import`.
-=======
 7. Review entry counts, excluded categories, database impact, and any large-import confirmation warning.
 8. Choose `Create and import`.
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 
 For a safe first import, use `Add demo` on the Sources page. It imports only the built-in synthetic playlist.
 

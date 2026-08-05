@@ -20,13 +20,10 @@ class Settings(BaseSettings):
     source_request_timeout_seconds: float = Field(default=10.0, ge=1.0, le=60.0)
     source_max_playlist_bytes: int = Field(default=20_000_000, ge=1024)
     source_worker_poll_seconds: float = Field(default=2.0, ge=0.5, le=60.0)
-<<<<<<< HEAD
-=======
     source_large_playlist_warning_entries: int = Field(default=100_000, ge=1)
     source_import_confirmation_threshold_entries: int = Field(default=50_000, ge=1)
     source_import_batch_size: int = Field(default=1_000, ge=1, le=10_000)
     source_estimated_entries_per_second: int = Field(default=250, ge=1)
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
     allow_private_source_urls: bool = False
 
     model_config = SettingsConfigDict(

@@ -65,11 +65,6 @@ Key boundaries:
 - Remote M3U URLs are validated for supported protocols and private-network safety before fetch.
 - Uploaded M3U files are stored under the configured upload directory with sanitized generated names.
 - Sensitive source configuration, including remote URLs and upload paths, is encrypted before persistence and never returned to the dashboard.
-<<<<<<< HEAD
-- `PlaylistImportJob` records queued/running/succeeded/failed progress for the worker.
-- `PlaylistImport` records start time, completion time, duration, imported channel count, group count, warnings, failures, checksum, and source version.
-- `RawChannel` stores provider data exactly as imported for each successful import row, including original name, original group, original URL, tvg metadata, raw EXTINF line, raw attributes, and import line number.
-=======
 - URL redaction is centralized and applied to API responses, status messages, import failures, audit details, and structured logs.
 - Large remote and uploaded playlists are copied to bounded server-side files and parsed line-by-line rather than loaded into memory.
 - Validation reports total entries, selected entries, excluded entries, content-type counts, sampled metadata without stream URLs, database-row estimates, and large-import confirmation requirements.
@@ -78,7 +73,6 @@ Key boundaries:
 - `PlaylistImport` records start time, completion time, duration, imported channel count, group count, warnings, failures, checksum, and source version.
 - `RawChannel` stores provider data exactly as imported for each successful import row, including original name, original group, original URL, tvg metadata, raw EXTINF line, raw attributes, and import line number.
 - Repeat imports replace the previous raw rows for the source inside one transaction to prevent uncontrolled raw-row growth while keeping failure rollback consistent.
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 - The worker polls queued jobs and due refreshes. API source creation returns immediately after queueing an import job.
 
 Scheduled refresh uses each source's `refresh_interval_minutes` and `next_refresh_at`. The worker avoids queueing a scheduled refresh when another queued or running import already exists for that source.
@@ -87,11 +81,7 @@ Scheduled refresh uses each source's `refresh_interval_minutes` and `next_refres
 
 - Provider URLs can target unsafe networks, so remote fetches reject unsupported protocols, local file URLs, invalid paths, and private/reserved destinations by default.
 - Provider URLs may contain credentials, so persisted source secrets are encrypted and API responses return only redacted display locations.
-<<<<<<< HEAD
-- Playlists may be huge or malformed, so validation enforces a byte limit and records human-readable warnings and failures instead of blocking the API thread.
-=======
 - Playlists may be huge or malformed, so validation enforces byte and entry-count thresholds, requires administrator confirmation above the configured threshold, and records human-readable warnings and failures.
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 - Import jobs can stall if the worker is not running, so the dashboard exposes queued/running job progress and Docker Compose starts a dedicated `worker` service.
 - Uploaded playlists can be path-confusion risks, so files are stored with generated sanitized names and reloaded only from the configured upload directory.
 

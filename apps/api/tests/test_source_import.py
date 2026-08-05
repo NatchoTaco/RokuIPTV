@@ -54,8 +54,6 @@ def test_demo_source_import_runs_as_async_job_and_preserves_raw_channels(
     assert first_channel.normalized_name is None
 
 
-<<<<<<< HEAD
-=======
 def test_repeat_import_replaces_raw_rows_for_source(
     client: TestClient,
     db_session: Session,
@@ -82,7 +80,6 @@ def test_repeat_import_replaces_raw_rows_for_source(
     assert import_count == 2
 
 
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
 def test_upload_source_validation_reports_counts(client: TestClient) -> None:
     bootstrap_admin(client)
     playlist = b"""#EXTM3U
@@ -102,8 +99,6 @@ https://example.com/two.m3u8
     assert body["playlist_reachable"] is True
     assert body["channel_count"] == 2
     assert body["group_count"] == 2
-<<<<<<< HEAD
-=======
 
 
 def test_url_source_creation_never_returns_credentials(client: TestClient) -> None:
@@ -201,4 +196,3 @@ https://example.com/movie/demo/1.mp4
     assert body["selected_content_types"] == []
     assert body["deferred_content_types"] == ["movie"]
     assert any("storage is deferred" in warning for warning in body["warnings"])
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)

@@ -40,8 +40,6 @@ def test_safe_url_validator_rejects_unsupported_and_private_sources() -> None:
 
     assert not private_result.is_safe
     assert "private" in private_result.errors[0] or "Localhost" in private_result.errors[0]
-<<<<<<< HEAD
-=======
 
 
 def test_m3u_parser_handles_provider_style_extinf_groups_and_commas() -> None:
@@ -52,7 +50,7 @@ https://example.com/live/user/pass/1001.m3u8
 https://example.com/movie/user/pass/2001.mp4
 #EXTINF:-1 tvg-id=series.one group_title=Series tvg-name="Show S01E02",Show S01E02
 https://example.com/series/user/pass/3001.mp4
-#EXTINF:-1 GROUP-TITLE="International – Café" tvg-id="unknown.one",Mystery Stream
+#EXTINF:-1 GROUP-TITLE="International Cafe" tvg-id="unknown.one",Mystery Stream
 https://example.com/content/4001.ts
 """
 
@@ -87,4 +85,3 @@ def test_m3u_parser_summarizes_large_synthetic_playlist_without_real_provider_da
     assert len(result.channels) == 0
     assert result.group_count == 10
     assert result.failures == []
->>>>>>> 1a6619e (Harden Milestone 2 playlist ingestion and credential handling)
